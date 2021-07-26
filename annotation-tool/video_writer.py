@@ -26,5 +26,13 @@ class SEDVideoWriter:
             self.__video_writer.write(frame)
 
     def clean(self):
-        self.__video_writer.release()
+        # self.__video_writer.release()
         self.__video_writer = None
+
+
+if __name__ == '__main__':
+    video_writer = SEDVideoWriter("clip_name", fps=5, save_loc='.')
+
+    for _ in range(10):
+        video_writer.write(frame)
+    video_writer.clean()

@@ -15,15 +15,16 @@ class RowData:
     def set_fps(fps):
         RowData.FPS = fps
 
-    def __init__(self, frame_no, team_name, activity=EventTypes.other):
+    def __init__(self, frame_no, duration, team_name, activity=EventTypes.other):
         self.frame_no = int(int(frame_no) * RowData.FPS)
+        self.duration = int(int(duration+1) * RowData.FPS)
         self.team_name = team_name
         self.activity = activity
 
 
 class DataFile:
-    def __init__(self,filename,  fps):
-        self.data = pd.read_excel(filename)
+    def __init__(self,filename, sheetname, fps):
+        self.data = pd.read_excel(filename, sheet_name=sheetname)
         self.row_pointer = 0
         print(self.data.head(100))
         RowData.set_fps(fps)
@@ -39,13 +40,14 @@ class DataFile:
             _time_in_seconds = int(_hour) * 3600 + int(_min) * 60 + int(_sec)
         return _time_in_seconds
 
-
-
     def get_info(self) -> RowData:
         row_data = self.data.loc[self.row_pointer]
         self.row_pointer += 1
 
-        _time_in_seconds = self.__get_time_in_secs(row_data.Time)
+        _start_time_in_seconds = self.__get_time_in_secs(str(row_data.Start_Time))
+        _stop_time_in_seconds = self.__get_time_in_secs(str(row_data.End_Time))
+        _duration = _stop_time_in_seconds - _start_time_in_seconds
+        _duration = _duration if _duration > 0 else 1
         _team = row_data.Team
         _activity = row_data.Activity
         _activity_type = EventTypes.other
@@ -55,7 +57,7 @@ class DataFile:
             _activity_type = EventTypes.line_out
         elif "Scrum" in _activity:
             _activity_type = EventTypes.scrum
-        return RowData(_time_in_seconds, _team, _activity_type)
+        return RowData(_start_time_in_seconds, _duration, _team, _activity_type)
 
 
 if __name__ == '__main__':

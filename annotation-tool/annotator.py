@@ -13,9 +13,10 @@ from video_writer import SEDVideoWriter
 class Annotate():
     def __init__(self):
         video_file_path = "/home/dulanj/MSc/Research/CH & FC v Kandy SC - DRL 2019_20 Match #23.mp4"
-        data_file_path = "/home/dulanj/MSc/Research/datafile/Data results.xlsx"
+        data_file_path = "/home/dulanj/MSc/sports-events-detection/datafile/Data results edited.xlsx"
+        sheet_name = 'Match1'
         self.video = VideoReader(video_file_path)
-        self.data = DataFile(filename=data_file_path, fps=self.video.get_fps())
+        self.data = DataFile(filename=data_file_path, sheetname=sheet_name, fps=self.video.get_fps())
 
     def test(self):
         frame = self.video.seek_n_read(10000)
@@ -23,16 +24,15 @@ class Annotate():
         _key = cv2.waitKey(5)
 
     def main(self):
-        duration = 10 * self.video.get_fps()
         for i in range(10):
             data_obj = self.data.get_info()
             start_point = data_obj.frame_no
-            end_point = start_point + duration
+            end_point = start_point + data_obj.duration
             print(f"Next clip from {start_point} to {end_point}")
-            self.save_clip(start_point, end_point)
+            self.save_clip(start_point, end_point, activity_name=data_obj.activity.name)
 
-    def save_clip(self, ts_from, ts_to):
-        clip_name = f"clip_{ts_from}_{ts_to}.avi"
+    def save_clip(self, ts_from, ts_to, activity_name):
+        clip_name = f"clip_{ts_from}_{ts_to}_{activity_name}.avi"
         clip_save_dir = "/home/dulanj/MSc/sports-events-detection/annotation-tool/clips"
         video_writer = SEDVideoWriter(clip_name, fps=self.video.get_fps(), save_loc=clip_save_dir)
         self.video.seek(ts_from)
