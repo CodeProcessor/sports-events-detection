@@ -3,6 +3,8 @@
 # @Filename:    data_file.py
 # @Author:      dulanj
 # @Time:        2021-07-25 11.36
+import enum
+
 import pandas as pd
 
 from common import EventTypes
@@ -17,13 +19,20 @@ class RowData:
 
     def __init__(self, frame_no, duration, team_name, activity=EventTypes.other):
         self.frame_no = int(int(frame_no) * RowData.FPS)
-        self.duration = int(int(duration+1) * RowData.FPS)
+        self.duration = int(int(duration + 1) * RowData.FPS)
         self.team_name = team_name
         self.activity = activity
 
 
+class RowNames(enum.Enum):
+    start_time = 14
+    end_time = 15
+    activity = 2
+    team = 1
+
+
 class DataFile:
-    def __init__(self,filename, sheetname, fps):
+    def __init__(self, filename, sheetname, fps):
         self.data = pd.read_excel(filename, sheet_name=sheetname)
         self.row_pointer = 0
         print(self.data.head(100))
@@ -32,24 +41,32 @@ class DataFile:
     def __get_time_in_secs(self, time_str: str) -> int:
         _time_split = time_str.split('.')
         _time_in_seconds = 0
+
+        def second_correction(_second):
+            if len(_second) == 1:
+                _second = _second + '0'
+            return _second
+
         if len(_time_split) == 2:
             _min, _sec = _time_split
-            _time_in_seconds = int(_min) * 60 + int(_sec)
+            _time_in_seconds = int(_min) * 60 + int(second_correction(_sec))
         elif len(_time_split) == 3:
             _hour, _min, _sec = _time_split
-            _time_in_seconds = int(_hour) * 3600 + int(_min) * 60 + int(_sec)
+            _time_in_seconds = int(_hour) * 3600 + int(_min) * 60 + int(second_correction(_sec))
         return _time_in_seconds
 
     def get_info(self) -> RowData:
         row_data = self.data.loc[self.row_pointer]
         self.row_pointer += 1
-
-        _start_time_in_seconds = self.__get_time_in_secs(str(row_data.Start_Time))
-        _stop_time_in_seconds = self.__get_time_in_secs(str(row_data.End_Time))
+        _start_time_string = str(row_data[RowNames.start_time.value])
+        _end_time_string = str(row_data[RowNames.end_time.value])
+        print(f"Getting info: start-{_start_time_string} end-{_end_time_string}")
+        _start_time_in_seconds = self.__get_time_in_secs(_start_time_string)
+        _stop_time_in_seconds = self.__get_time_in_secs(_end_time_string)
         _duration = _stop_time_in_seconds - _start_time_in_seconds
         _duration = _duration if _duration > 0 else 1
-        _team = row_data.Team
-        _activity = row_data.Activity
+        _team = row_data[RowNames.team.value]
+        _activity = row_data[RowNames.activity.value]
         _activity_type = EventTypes.other
         if "Kick" in _activity:
             _activity_type = EventTypes.kick

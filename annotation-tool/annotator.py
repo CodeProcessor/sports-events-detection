@@ -24,19 +24,23 @@ class Annotate():
         _key = cv2.waitKey(5)
 
     def main(self):
-        for i in range(10):
+        for i in range(66):
             data_obj = self.data.get_info()
-            start_point = data_obj.frame_no
-            end_point = start_point + data_obj.duration
-            print(f"Next clip from {start_point} to {end_point}")
-            self.save_clip(start_point, end_point, activity_name=data_obj.activity.name)
+            self.save_clip(data_obj)
 
-    def save_clip(self, ts_from, ts_to, activity_name):
-        clip_name = f"clip_{ts_from}_{ts_to}_{activity_name}.avi"
+    def save_clip(self, data_obj):
+        start_point = data_obj.frame_no
+        end_point = start_point + data_obj.duration
+        activity_name = data_obj.activity.name
+        print(f"Next clip from {start_point} to {end_point}")
+        if start_point == 0:
+            print("Skipping invalid clip")
+            return 0
+        clip_name = f"clip_{start_point}_{end_point}_{activity_name}.avi"
         clip_save_dir = "/home/dulanj/MSc/sports-events-detection/annotation-tool/clips"
         video_writer = SEDVideoWriter(clip_name, fps=self.video.get_fps(), save_loc=clip_save_dir)
-        self.video.seek(ts_from)
-        for _ in range(ts_to-ts_from):
+        self.video.seek(start_point)
+        for _ in range(end_point - start_point):
             frame = self.video.read_frame()
             video_writer.write(frame)
         video_writer.clean()
