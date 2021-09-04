@@ -9,11 +9,18 @@ import os
 import torch
 from PIL import Image
 
+from train_network.clasification.params import CLASSES
+
 
 class CatDogDataset(torch.utils.data.Dataset):
     def __init__(self, image_dir, transform=None, test=False):
         self.location = image_dir
-        self.file_list = glob.glob(self.location + '/*.*')
+        self.file_list = []
+        self.no_of_classes = len(CLASSES)
+        for _class in CLASSES:
+            _full_cls_path = os.path.join(self.location, _class)
+            _class_index = CLASSES.index(_class)
+            self.file_list += [(_class_index, file_name) for file_name in glob.glob(_full_cls_path + '/*.*')]
         self.transform = transform
         self.is_test = test
 
@@ -21,18 +28,15 @@ class CatDogDataset(torch.utils.data.Dataset):
         return len(self.file_list)
 
     def __getitem__(self, index):
-        file_name = self.file_list[index]
-        image = Image.open(file_name)
-        base_name = os.path.basename(file_name)
-        label_matrix = torch.zeros((2))
-        if 'cat' in base_name:
-            label_matrix[0] = 1
-        else:
-            label_matrix[1] = 1
+        _class_index, _file_name = self.file_list[index]
+        image = Image.open(_file_name)
+
+        label_matrix = torch.zeros(self.no_of_classes)
+        label_matrix[_class_index] = 1
 
         if self.transform:
             image, label_matrix = self.transform(image, label_matrix)
 
         if self.is_test:
-            return image, file_name
+            return image, _file_name
         return image, label_matrix
