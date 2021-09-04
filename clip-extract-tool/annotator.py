@@ -10,10 +10,10 @@ from video_reader import VideoReader
 from video_writer import SEDVideoWriter
 
 
-class Annotate():
+class Annotate:
     def __init__(self):
         video_file_path = "/home/dulanj/MSc/Research/CH & FC v Kandy SC - DRL 2019_20 Match #23.mp4"
-        data_file_path = "/home/dulanj/MSc/sports-events-detection/datafile/Data results edited.xlsx"
+        data_file_path = "data/datafile/Data results edited.xlsx"
         sheet_name = 'Match1'
         self.video = VideoReader(video_file_path)
         self.data = DataFile(filename=data_file_path, sheetname=sheet_name, fps=self.video.get_fps())

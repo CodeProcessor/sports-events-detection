@@ -35,9 +35,10 @@ class Clips:
             print("Type q - exit | s - save")
             c = cv2.waitKey(0)
             print(c)
-            ret, frame = video_clip.read()
             if c == 27 or c == 113:
                 sys.exit(0)
+            if c == 100:
+                return 0
             if self._extract_type == ExtractTypes.manual:
                 if c == 115:
                     self.type_dict[_clip_type] += 1
@@ -47,6 +48,7 @@ class Clips:
                         os.makedirs(_dir_name)
                     cv2.imwrite(_file_name, frame)
                     print(f"Image saved! - {_file_name}")
+            ret, frame = video_clip.read()
 
     def clip_info(self, clip_name):
         _basename = os.path.basename(clip_name)
