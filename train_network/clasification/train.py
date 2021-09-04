@@ -44,7 +44,7 @@ transform = Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[1, 1, 1])
 ])
-loss_func = nn.BCELoss()
+loss_func = nn.CrossEntropyLoss()
 
 
 def train_fn(train_loader, model, optimizer, loss_fn):
@@ -106,7 +106,7 @@ def main():
         )
 
         if _loss < current_loss:
-            print(f"\nsaving best model MAP > {_loss}")
+            print(f"\nSaving Model, loss > {_loss}")
             current_loss = _loss
             torch.save({
                 'epoch': epoch,
