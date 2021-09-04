@@ -37,7 +37,7 @@ class Annotate():
             print("Skipping invalid clip")
             return 0
         clip_name = f"clip_{start_point}_{end_point}_{activity_name}.avi"
-        clip_save_dir = "/home/dulanj/MSc/sports-events-detection/annotation-tool/clips"
+        clip_save_dir = "//clips"
         video_writer = SEDVideoWriter(clip_name, fps=self.video.get_fps(), save_loc=clip_save_dir)
         self.video.seek(start_point)
         for _ in range(end_point - start_point):
