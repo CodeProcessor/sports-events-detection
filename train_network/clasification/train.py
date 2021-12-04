@@ -6,15 +6,14 @@
 """
 import numpy as np
 from torch import optim
-from torch.utils.data import DataLoader
-from torchvision.transforms import transforms
+
 import torch
 import torch.nn as nn
 from tqdm import tqdm
 import wandb
 
 
-from dataset import CatDogDataset
+from dataset import ClassificationDataset
 from model import ClassificationModel
 from params import (
     DEVICE,
@@ -28,6 +27,7 @@ from params import (
     EPOCHS,
     MODEL_SAVE_PATH, LOAD_MODEL, LOAD_MODEL_FILE
 )
+from train_network.clasification.data_loader import get_train_loader
 
 
 class Compose(object):
@@ -41,11 +41,7 @@ class Compose(object):
         return img, boxes
 
 
-transform = Compose([
-    transforms.Resize((64, 64)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[1, 1, 1])
-])
+
 loss_func = nn.CrossEntropyLoss()
 
 
@@ -54,13 +50,19 @@ def train_fn(train_loader, model, optimizer, loss_fn):
     _loss = []
 
     for batch_idx, (x, y) in enumerate(loop):
+        # get the inputs; data is a list of [inputs, labels]
         x, y = x.to(DEVICE), y.to(DEVICE)
+
+        # zero the parameter gradients
+        optimizer.zero_grad()
+
+        # forward + backward + optimize
         out = model(x)
         loss = loss_fn(out, y)
         _loss.append(loss.item())
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
         loop.set_postfix(loss=loss.item())
 
     mean_loss = np.mean(_loss)
@@ -83,19 +85,7 @@ def main():
         start_epoch = checkpoint['epoch']
         current_loss = checkpoint['loss']
 
-    train_dataset = CatDogDataset(
-        transform=transform,
-        image_dir=IMG_DIR
-    )
-
-    train_loader = DataLoader(
-        dataset=train_dataset,
-        batch_size=BATCH_SIZE,
-        num_workers=NUM_WORKERS,
-        pin_memory=PIN_MEMORY,
-        shuffle=True,
-        drop_last=False
-    )
+    train_loader = get_train_loader()
 
     for epoch in range(start_epoch, EPOCHS):
         print(f"\nEpoch: {epoch + 1}/{EPOCHS}")

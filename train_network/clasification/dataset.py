@@ -12,7 +12,7 @@ from PIL import Image
 from train_network.clasification.params import CLASSES
 
 
-class CatDogDataset(torch.utils.data.Dataset):
+class ClassificationDataset(torch.utils.data.Dataset):
     def __init__(self, image_dir, transform=None, test=False):
         self.location = image_dir
         self.file_list = []
@@ -35,8 +35,9 @@ class CatDogDataset(torch.utils.data.Dataset):
         label_matrix[_class_index] = 1
 
         if self.transform:
-            image, label_matrix = self.transform(image, label_matrix)
+            image = self.transform(image)
 
-        if self.is_test:
-            return image, _file_name
+        # if self.is_test:
+        #     return image, _class_index
+
         return image, label_matrix
