@@ -11,6 +11,8 @@ from torchvision.transforms import transforms
 import torch
 import torch.nn as nn
 from tqdm import tqdm
+import wandb
+
 
 from dataset import CatDogDataset
 from model import ClassificationModel
@@ -104,7 +106,8 @@ def main():
             optimizer=optimizer,
             loss_fn=loss_func
         )
-
+        wandb.log({"loss": _loss})
+        wandb.watch(model)
         if _loss < current_loss:
             print(f"\nSaving Model, loss > {_loss}")
             current_loss = _loss
@@ -117,4 +120,10 @@ def main():
 
 
 if __name__ == '__main__':
+    wandb.init(project="play_no-play_classification", entity="dulan20")
+    wandb.config = {
+        "learning_rate": LR,
+        "epochs": EPOCHS,
+        "batch_size": BATCH_SIZE
+    }
     main()

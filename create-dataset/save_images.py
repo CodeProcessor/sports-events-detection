@@ -14,6 +14,7 @@ import cv2
 
 class ExtractTypes(enum.Enum):
     manual = 0
+    auto = 1
 
 
 class Clips:
@@ -30,24 +31,37 @@ class Clips:
     def extract_clip(self, clip_path, _clip_type):
         video_clip = cv2.VideoCapture(clip_path)
         ret, frame = video_clip.read()
+        frame_position = 1
+        c = ""
         while ret:
-            cv2.imshow('clip_window', frame)
-            print("Type q - exit | s - save")
-            c = cv2.waitKey(0)
-            print(c)
+
             if c == 27 or c == 113:
                 sys.exit(0)
             if c == 100:
                 return 0
+
+            def save_image():
+                _file_name = os.path.join(self._destination, _clip_type,
+                                          f"{_clip_type}_{self.type_dict[_clip_type]}.jpg")
+                _dir_name = os.path.dirname(_file_name)
+                if not os.path.exists(_dir_name):
+                    os.makedirs(_dir_name)
+                cv2.imwrite(_file_name, frame)
+                print(f"Image saved! - {_file_name}")
+
             if self._extract_type == ExtractTypes.manual:
+                cv2.imshow('clip_window', frame)
+                print("Type q - exit | s - save")
+                c = cv2.waitKey(0)
+                print(c)
                 if c == 115:
                     self.type_dict[_clip_type] += 1
-                    _file_name = os.path.join(self._destination, _clip_type, f"{_clip_type}_{self.type_dict[_clip_type]}.jpg")
-                    _dir_name = os.path.dirname(_file_name)
-                    if not os.path.exists(_dir_name):
-                        os.makedirs(_dir_name)
-                    cv2.imwrite(_file_name, frame)
-                    print(f"Image saved! - {_file_name}")
+                    save_image()
+            elif self._extract_type == ExtractTypes.auto:
+                if frame_position % 50 == 0:
+                    self.type_dict[_clip_type] += 1
+                    save_image()
+            frame_position += 1
             ret, frame = video_clip.read()
 
     def clip_info(self, clip_name):
@@ -68,8 +82,8 @@ class Clips:
 
 
 if __name__ == '__main__':
-    path_to_clips = "../clip-extract-tool/clips"
-    destination = "extracted_images"
-    _type = ExtractTypes.manual
+    path_to_clips = "../clips2"
+    destination = "extracted_images2"
+    _type = ExtractTypes.auto
     clip_obj = Clips(path_to_clips, _type, dest=destination)
     clip_obj.extract()

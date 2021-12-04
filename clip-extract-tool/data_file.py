@@ -55,9 +55,12 @@ class DataFile:
             _time_in_seconds = int(_hour) * 3600 + int(_min) * 60 + int(second_correction(_sec))
         return _time_in_seconds
 
-    def get_info(self) -> RowData:
+    def get_info(self, pointer=None) -> RowData:
         row_data = self.data.loc[self.row_pointer]
-        self.row_pointer += 1
+        if pointer is None:
+            self.row_pointer += 1
+        else:
+            self.row_pointer = pointer
         _start_time_string = str(row_data[RowNames.start_time.value])
         _end_time_string = str(row_data[RowNames.end_time.value])
         print(f"Getting info: start-{_start_time_string} end-{_end_time_string}")
@@ -74,6 +77,10 @@ class DataFile:
             _activity_type = EventTypes.line_out
         elif "Scrum" in _activity:
             _activity_type = EventTypes.scrum
+        elif "play" in _activity:
+            _activity_type = EventTypes.play
+        elif "noplay" in _activity:
+            _activity_type = EventTypes.noplay
         return RowData(_start_time_in_seconds, _duration, _team, _activity_type)
 
 

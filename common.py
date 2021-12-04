@@ -11,3 +11,5 @@ class EventTypes(enum.Enum):
     kick = 1
     scrum = 2
     other = 3
+    play = 4
+    noplay = 5

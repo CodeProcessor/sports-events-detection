@@ -14,7 +14,7 @@ class Annotate:
     def __init__(self):
         video_file_path = "/home/dulanj/MSc/Research/CH & FC v Kandy SC - DRL 2019_20 Match #23.mp4"
         data_file_path = "data/datafile/Data results edited.xlsx"
-        sheet_name = 'Match1'
+        sheet_name = 'Match1a'
         self.video = VideoReader(video_file_path)
         self.data = DataFile(filename=data_file_path, sheetname=sheet_name, fps=self.video.get_fps())
 
@@ -24,8 +24,8 @@ class Annotate:
         _key = cv2.waitKey(5)
 
     def main(self):
-        for i in range(66):
-            data_obj = self.data.get_info()
+        for i in range(7, 13):
+            data_obj = self.data.get_info(i)
             self.save_clip(data_obj)
 
     def save_clip(self, data_obj):
@@ -37,7 +37,7 @@ class Annotate:
             print("Skipping invalid clip")
             return 0
         clip_name = f"clip_{start_point}_{end_point}_{activity_name}.avi"
-        clip_save_dir = "//clips"
+        clip_save_dir = "clips2"
         video_writer = SEDVideoWriter(clip_name, fps=self.video.get_fps(), save_loc=clip_save_dir)
         self.video.seek(start_point)
         for _ in range(end_point - start_point):
