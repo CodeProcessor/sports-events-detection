@@ -2,10 +2,11 @@
 model:
   epochs: 50
   batch_size: 16
-  lr: 0.001
+  lr: 0.00001
   channels: 3
-  weight_decay: 0.0005
+  weight_decay: 0
   no_of_workers: 2
+  pin_memory: True
   load_model: False
   save_model: True
   model_save_path: ../../data/trained_models/play_noplay/best-model-parameters2.pt

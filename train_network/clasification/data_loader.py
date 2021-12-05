@@ -4,6 +4,8 @@
 @Author:      dulanj
 @Time:        04/12/2021 12:50
 """
+import os
+
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms, Compose
 
@@ -49,7 +51,7 @@ def get_loader(dataset, batch_size):
         dataset=dataset,
         batch_size=batch_size,
         num_workers=configs["model"]["no_of_workers"],
-        pin_memory=configs["model"]["no_of_workers"],
+        pin_memory=configs["model"]["pin_memory"],
         shuffle=True,
         drop_last=False
     )

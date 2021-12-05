@@ -6,10 +6,11 @@
 """
 import numpy as np
 import torch.nn as nn
-import wandb
 from torch import optim
+from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
 
+import wandb
 from model import ClassificationModel
 from params import *
 from train_network.clasification.data_loader import get_train_loader, get_val_loader
@@ -101,6 +102,7 @@ def main():
     """
     Go through the training data set and train the model for a number of epochs
     """
+    _lr_scheduler = StepLR(optimizer, step_size=10, gamma=0.2)
     for epoch in range(start_epoch, configs["model"]["epochs"]):
         print(f"\nEpoch: {epoch + 1}/{configs['model']['epochs']}")
 
@@ -110,7 +112,7 @@ def main():
             optimizer=optimizer,
             loss_fn=loss_func
         )
-
+        _lr_scheduler.step()
         _val_loss, _val_acc = val_fn(
             val_loader=val_loader,
             model=model,
@@ -123,6 +125,7 @@ def main():
         wandb.log({"train_acc": _train_acc})
         wandb.log({"val_loss": _val_loss})
         wandb.log({"val_acc": _val_acc})
+        wandb.log({"lr": float(_lr_scheduler.get_last_lr()[0])})
         """
         Save model if the validation loss is less than the current loss
         """

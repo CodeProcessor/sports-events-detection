@@ -8,10 +8,10 @@ import torch
 from PIL import Image
 from torchvision.transforms import Compose, transforms
 
-from video_writer import VideoWriter
 from draw import put_text, rectangle
-from params import CLASSES
+from params import configs
 from train_network.clasification.model import ClassificationModel
+from video_writer import VideoWriter
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -58,7 +58,8 @@ def main(file_name, model_path):
             frame = rectangle(frame, (5, 5), (320, 120))
             frame = put_text(frame, text=f"Frame No: {frame_no}", pos=(20, 40), font_size=1, color=(255, 0, 0),
                              thickness=3)
-            frame = put_text(frame, text=f"Prediction: {CLASSES[predicted]}", pos=(20, 90), font_size=1,
+            frame = put_text(frame, text=f"Prediction: {configs['data']['class_names'][predicted]}", pos=(20, 90),
+                             font_size=1,
                              color=(255, 0, 0), thickness=3)
             cv2.imshow("frame", frame)
             cv2.waitKey(1)
