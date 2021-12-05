@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import transforms, Compose
 
 from train_network.clasification.dataset import ClassificationDataset
-from train_network.clasification.params import IMG_DIR, BATCH_SIZE, NUM_WORKERS, PIN_MEMORY, IMG_TEST_DIR
+from train_network.clasification.params import *
 
 transform = Compose([
     transforms.Resize((64, 64)),
@@ -20,19 +20,19 @@ transform = Compose([
 def get_train_loader():
     train_dataset = ClassificationDataset(
         transform=transform,
-        image_dir=IMG_DIR
+        image_dir=IMG_DIR_TRAIN
     )
 
-    train_loader = DataLoader(
-        dataset=train_dataset,
-        batch_size=BATCH_SIZE,
-        num_workers=NUM_WORKERS,
-        pin_memory=PIN_MEMORY,
-        shuffle=True,
-        drop_last=False
-    )
+    return get_loader(train_dataset, batch_size=BATCH_SIZE)
 
-    return train_loader
+
+def get_val_loader():
+    test_dataset = ClassificationDataset(
+        transform=transform,
+        image_dir=IMG_VAL_DIR,
+        test=True
+    )
+    return get_loader(test_dataset, batch_size=1)
 
 
 def get_test_loader():
@@ -41,16 +41,18 @@ def get_test_loader():
         image_dir=IMG_TEST_DIR,
         test=True
     )
+    return get_loader(test_dataset, batch_size=1)
 
-    test_loader = DataLoader(
-        dataset=test_dataset,
-        batch_size=3,
+
+def get_loader(dataset, batch_size):
+    return DataLoader(
+        dataset=dataset,
+        batch_size=batch_size,
         num_workers=NUM_WORKERS,
         pin_memory=PIN_MEMORY,
         shuffle=True,
         drop_last=False
     )
-    return test_loader
 
 
 if __name__ == '__main__':

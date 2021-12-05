@@ -5,29 +5,14 @@
 @Time:        2021-08-23 14.42
 """
 import numpy as np
-from torch import optim
-
-import torch
 import torch.nn as nn
+from torch import optim
 from tqdm import tqdm
+
 import wandb
-
-
-from dataset import ClassificationDataset
 from model import ClassificationModel
-from params import (
-    DEVICE,
-    IMG_DIR,
-    WEIGHT_DECAY,
-    LR,
-    NO_OF_CLASSES,
-    BATCH_SIZE,
-    NUM_WORKERS,
-    PIN_MEMORY,
-    EPOCHS,
-    MODEL_SAVE_PATH, LOAD_MODEL, LOAD_MODEL_FILE
-)
-from train_network.clasification.data_loader import get_train_loader
+from params import *
+from train_network.clasification.data_loader import get_train_loader, get_val_loader
 
 
 class Compose(object):
@@ -41,14 +26,13 @@ class Compose(object):
         return img, boxes
 
 
-
 loss_func = nn.CrossEntropyLoss()
 
 
 def train_fn(train_loader, model, optimizer, loss_fn):
     loop = tqdm(train_loader, leave=True)
     _loss = []
-
+    correct = 0
     for batch_idx, (x, y) in enumerate(loop):
         # get the inputs; data is a list of [inputs, labels]
         x, y = x.to(DEVICE), y.to(DEVICE)
@@ -57,17 +41,32 @@ def train_fn(train_loader, model, optimizer, loss_fn):
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        out = model(x)
-        loss = loss_fn(out, y)
+        output = model(x)
+        loss = loss_fn(output, y)
         _loss.append(loss.item())
         loss.backward()
         optimizer.step()
 
         loop.set_postfix(loss=loss.item())
-
+    #     correct += (output == y).items().sum()
+    #
+    # accuracy = 100 * correct / len(train_loader.dataset)
     mean_loss = np.mean(_loss)
-    print(f"\nMean loss was {mean_loss}")
-    return mean_loss
+    print(f"Training Mean loss was {mean_loss}")
+    return mean_loss#, accuracy
+
+
+def val_fn(val_loader, model, loss_fn):
+    valid_loss = 0.0
+    model.eval()  # Optional when not using Model Specific layer
+    for data, labels in val_loader:
+        if torch.cuda.is_available():
+            data, labels = data.cuda(), labels.cuda()
+
+        target = model(data)
+        loss = loss_fn(target, labels)
+        valid_loss = loss.item() * data.size(0)
+    return valid_loss
 
 
 def main():
@@ -86,7 +85,11 @@ def main():
         current_loss = checkpoint['loss']
 
     train_loader = get_train_loader()
+    val_loader = get_val_loader()
 
+    """
+    Go through the training data set and train the model for a number of epochs
+    """
     for epoch in range(start_epoch, EPOCHS):
         print(f"\nEpoch: {epoch + 1}/{EPOCHS}")
 
@@ -96,11 +99,24 @@ def main():
             optimizer=optimizer,
             loss_fn=loss_func
         )
-        wandb.log({"loss": _loss})
-        wandb.watch(model)
-        if _loss < current_loss:
-            print(f"\nSaving Model, loss > {_loss}")
-            current_loss = _loss
+
+        _val_loss = val_fn(
+            val_loader=val_loader,
+            model=model,
+            loss_fn=loss_func
+        )
+        """
+        Update weights and biases graphs
+        """
+        wandb.log({"train_loss": _loss})
+        wandb.log({"val_loss": _val_loss})
+
+        """
+        Save model if the validation loss is less than the current loss
+        """
+        if _val_loss < current_loss:
+            print(f"Saving Model, val loss > {_val_loss}")
+            current_loss = _val_loss
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),

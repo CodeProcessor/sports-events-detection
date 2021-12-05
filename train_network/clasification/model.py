@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 from torchsummary import summary
 
-from params import DEVICE
+from params import DEVICE, NO_OF_CLASSES
 
 architecture_config = [
     # kernal size, no of filters, Stride, padding
@@ -91,6 +91,13 @@ def test():
     summary(model, input_size=(3, 64, 64), device=DEVICE)
     x = torch.randn(2, 3, 64, 64, device=DEVICE)
     print(model(x).shape)
+
+
+def load_model(weight_file_path):
+    model = ClassificationModel(num_classes=NO_OF_CLASSES).to(DEVICE)
+    checkpoint = torch.load(weight_file_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    return model
 
 
 if __name__ == '__main__':
