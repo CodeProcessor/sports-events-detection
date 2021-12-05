@@ -8,6 +8,7 @@ import torch
 from PIL import Image
 from torchvision.transforms import Compose, transforms
 
+from video_writer import VideoWriter
 from draw import put_text, rectangle
 from params import CLASSES
 from train_network.clasification.model import ClassificationModel
@@ -33,11 +34,11 @@ def load_model(model_file_name):
     return model
 
 
-def main(file_name):
+def main(file_name, model_path):
     frame_no = 0
     vc = cv2.VideoCapture(file_name)
-    model = load_model(
-        '/home/dulanj/MSc/sports-events-detection/data/trained_models/play_noplay/best-model-parameters2.pt')
+    model = load_model(model_path)
+    vw = VideoWriter("output.mp4", 10)
     while vc.isOpened():
         rval, frame = vc.read()
         if rval:
@@ -52,7 +53,6 @@ def main(file_name):
             image = transform(image)
             image = image.unsqueeze(0)
             image = image.to(DEVICE)
-            print(image.shape)
             outputs = model(image)
             _, predicted = torch.max(outputs.data, 1)
             frame = rectangle(frame, (5, 5), (320, 120))
@@ -62,11 +62,16 @@ def main(file_name):
                              color=(255, 0, 0), thickness=3)
             cv2.imshow("frame", frame)
             cv2.waitKey(1)
+            vw.write(frame)
+            # if frame_no > 5000:
+            #     break
 
 
 if __name__ == '__main__':
     # if len(sys.argv) != 2:
     #     print("Usage: python main.py video_file_name")
     #     exit(1)
-    main("/home/dulanj/MSc/Research/CH & FC v Kandy SC - DRL 2019_20 Match #23.mp4")
+    model_path = '/home/dulanj/MSc/sports-events-detection/data/trained_models/play_noplay/best-model-parameters2.pt'
+    video_path = "/home/dulanj/MSc/Research/CH & FC v Kandy SC - DRL 2019_20 Match #23.mp4"
+    main(video_path, model_path)
     cv2.destroyAllWindows()
