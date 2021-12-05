@@ -41,32 +41,47 @@ def train_fn(train_loader, model, optimizer, loss_fn):
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        output = model(x)
-        loss = loss_fn(output, y)
+        predicted = model(x)
+        loss = loss_fn(predicted, y)
         _loss.append(loss.item())
         loss.backward()
         optimizer.step()
 
         loop.set_postfix(loss=loss.item())
-    #     correct += (output == y).items().sum()
-    #
-    # accuracy = 100 * correct / len(train_loader.dataset)
+
+        _, target = torch.max(predicted.data, 1)
+        _, labels = torch.max(y.data, 1)
+
+        # print(target)
+        # print(y)
+        # print(target == labels)
+        correct += torch.sum(target == labels)
+
+    accuracy = 100 * correct / len(train_loader.dataset)
     mean_loss = np.mean(_loss)
     print(f"Training Mean loss was {mean_loss}")
-    return mean_loss#, accuracy
+    print(f"Training Accuracy {accuracy}")
+    return mean_loss, accuracy
 
 
 def val_fn(val_loader, model, loss_fn):
     valid_loss = 0.0
+    correct = 0
     model.eval()  # Optional when not using Model Specific layer
     for data, labels in val_loader:
         if torch.cuda.is_available():
             data, labels = data.cuda(), labels.cuda()
 
-        target = model(data)
-        loss = loss_fn(target, labels)
+        predicted = model(data)
+        loss = loss_fn(predicted, labels)
         valid_loss = loss.item() * data.size(0)
-    return valid_loss
+
+        _, target = torch.max(predicted.data, 1)
+        correct += torch.sum(target == labels)
+    accuracy = 100 * correct / len(val_loader.dataset)
+    print(f"Validation Loss: {valid_loss}")
+    print(f"Validation Accuracy: {accuracy}")
+    return valid_loss, accuracy
 
 
 def main():
@@ -93,14 +108,14 @@ def main():
     for epoch in range(start_epoch, EPOCHS):
         print(f"\nEpoch: {epoch + 1}/{EPOCHS}")
 
-        _loss = train_fn(
+        _loss, _train_acc = train_fn(
             train_loader=train_loader,
             model=model,
             optimizer=optimizer,
             loss_fn=loss_func
         )
 
-        _val_loss = val_fn(
+        _val_loss, _val_acc = val_fn(
             val_loader=val_loader,
             model=model,
             loss_fn=loss_func
@@ -109,8 +124,9 @@ def main():
         Update weights and biases graphs
         """
         wandb.log({"train_loss": _loss})
+        wandb.log({"train_acc": _train_acc})
         wandb.log({"val_loss": _val_loss})
-
+        wandb.log({"val_acc": _val_acc})
         """
         Save model if the validation loss is less than the current loss
         """
