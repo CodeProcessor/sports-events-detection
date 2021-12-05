@@ -1,0 +1,22 @@
+# sample config defaults file
+model:
+  epochs: 50
+  batch_size: 16
+  lr: 0.001
+  channels: 3
+  weight_decay: 0.0005
+  no_of_workers: 2
+  load_model: False
+  save_model: True
+  model_save_path: ../../data/trained_models/play_noplay/best-model-parameters2.pt
+  model_load_path: ../../data/trained_models/play_noplay/best-model-parameters2.pt
+
+data:
+  image_dir: ../../data/dataset2/
+  image_train_dir: train
+  image_test_dir: test
+  image_val_dir: val
+  class_names:
+    - play
+    - noplay
+  no_of_classes: 2

@@ -6,20 +6,21 @@
 """
 import glob
 import os
+
 import torch
 from PIL import Image
 
-from train_network.clasification.params import CLASSES
+from train_network.clasification.params import configs
 
 
 class ClassificationDataset(torch.utils.data.Dataset):
     def __init__(self, image_dir, transform=None, test=False):
         self.location = image_dir
         self.file_list = []
-        self.no_of_classes = len(CLASSES)
-        for _class in CLASSES:
+        self.no_of_classes = len(configs["data"]["class_names"])
+        for _class in configs["data"]["class_names"]:
             _full_cls_path = os.path.join(self.location, _class)
-            _class_index = CLASSES.index(_class)
+            _class_index = configs["data"]["class_names"].index(_class)
             self.file_list += [(_class_index, file_name) for file_name in glob.glob(_full_cls_path + '/*.*')]
         self.transform = transform
         self.is_test = test

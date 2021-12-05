@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 from torchsummary import summary
 
-from params import DEVICE, NO_OF_CLASSES
+from params import DEVICE
 
 architecture_config = [
     # kernal size, no of filters, Stride, padding
@@ -78,10 +78,10 @@ class ClassificationModel(nn.Module):
     def _create_fully_connected_layers(self, num_classes):
         return nn.Sequential(
             nn.Flatten(),
-            nn.Linear(8*8*64, 256),
+            nn.Linear(8 * 8 * 64, 256),
             nn.Dropout(0.2),
             nn.LeakyReLU(0.1),
-            nn.Linear(256,  num_classes),
+            nn.Linear(256, num_classes),
             nn.Softmax()
         )
 
@@ -93,8 +93,8 @@ def test():
     print(model(x).shape)
 
 
-def load_model(weight_file_path):
-    model = ClassificationModel(num_classes=NO_OF_CLASSES).to(DEVICE)
+def load_model(weight_file_path, no_of_classes):
+    model = ClassificationModel(num_classes=no_of_classes).to(DEVICE)
     checkpoint = torch.load(weight_file_path)
     model.load_state_dict(checkpoint['model_state_dict'])
     return model

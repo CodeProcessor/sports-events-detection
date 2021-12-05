@@ -6,10 +6,10 @@
 """
 import numpy as np
 import torch.nn as nn
+import wandb
 from torch import optim
 from tqdm import tqdm
 
-import wandb
 from model import ClassificationModel
 from params import *
 from train_network.clasification.data_loader import get_train_loader, get_val_loader
@@ -52,9 +52,6 @@ def train_fn(train_loader, model, optimizer, loss_fn):
         _, target = torch.max(predicted.data, 1)
         _, labels = torch.max(y.data, 1)
 
-        # print(target)
-        # print(y)
-        # print(target == labels)
         correct += torch.sum(target == labels)
 
     accuracy = 100 * correct / len(train_loader.dataset)
@@ -85,15 +82,14 @@ def val_fn(val_loader, model, loss_fn):
 
 
 def main():
-    model = ClassificationModel(num_classes=NO_OF_CLASSES).to(DEVICE)
+    model = ClassificationModel(num_classes=configs["data"]["no_of_classes"]).to(DEVICE)
     optimizer = optim.Adam(
-        model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY
-    )
+        model.parameters(), lr=configs["model"]["lr"], weight_decay=configs["model"]["weight_decay"])
     current_loss = 10000
     start_epoch = 0
 
-    if LOAD_MODEL:
-        checkpoint = torch.load(LOAD_MODEL_FILE)
+    if configs["model"]["load_model"]:
+        checkpoint = torch.load(configs["model"]["load_model_path"])
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch']
@@ -105,8 +101,8 @@ def main():
     """
     Go through the training data set and train the model for a number of epochs
     """
-    for epoch in range(start_epoch, EPOCHS):
-        print(f"\nEpoch: {epoch + 1}/{EPOCHS}")
+    for epoch in range(start_epoch, configs["model"]["epochs"]):
+        print(f"\nEpoch: {epoch + 1}/{configs['model']['epochs']}")
 
         _loss, _train_acc = train_fn(
             train_loader=train_loader,
@@ -138,14 +134,16 @@ def main():
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': _loss
-            }, MODEL_SAVE_PATH)
+            }, configs["model"]["model_save_path"])
+
+
+def flatten_dict(dd, separator='_', prefix=''):
+    return {prefix + separator + k if prefix else k: v
+            for kk, vv in dd.items()
+            for k, v in flatten_dict(vv, separator, kk).items()
+            } if isinstance(dd, dict) else {prefix: dd}
 
 
 if __name__ == '__main__':
-    wandb.init(project="play_no-play_classification", entity="dulan20")
-    wandb.config = {
-        "learning_rate": LR,
-        "epochs": EPOCHS,
-        "batch_size": BATCH_SIZE
-    }
+    wandb.init(project="play_no-play_classification", entity="dulan20", config=flatten_dict(configs))
     main()

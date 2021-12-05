@@ -20,16 +20,16 @@ transform = Compose([
 def get_train_loader():
     train_dataset = ClassificationDataset(
         transform=transform,
-        image_dir=IMG_DIR_TRAIN
+        image_dir=os.path.join(configs["data"]["image_dir"], configs["data"]["image_train_dir"]),
     )
 
-    return get_loader(train_dataset, batch_size=BATCH_SIZE)
+    return get_loader(train_dataset, batch_size=configs["model"]["batch_size"])
 
 
 def get_val_loader():
     test_dataset = ClassificationDataset(
         transform=transform,
-        image_dir=IMG_VAL_DIR,
+        image_dir=os.path.join(configs["data"]["image_dir"], configs["data"]["image_val_dir"]),
         test=True
     )
     return get_loader(test_dataset, batch_size=1)
@@ -38,7 +38,7 @@ def get_val_loader():
 def get_test_loader():
     test_dataset = ClassificationDataset(
         transform=transform,
-        image_dir=IMG_TEST_DIR,
+        image_dir=os.path.join(configs["data"]["image_dir"], configs["data"]["image_test_dir"]),
         test=True
     )
     return get_loader(test_dataset, batch_size=1)
@@ -48,8 +48,8 @@ def get_loader(dataset, batch_size):
     return DataLoader(
         dataset=dataset,
         batch_size=batch_size,
-        num_workers=NUM_WORKERS,
-        pin_memory=PIN_MEMORY,
+        num_workers=configs["model"]["no_of_workers"],
+        pin_memory=configs["model"]["no_of_workers"],
         shuffle=True,
         drop_last=False
     )

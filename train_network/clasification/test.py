@@ -4,18 +4,16 @@
 @Time:        2021-08-23 16.12
 """
 import torch
-from torch.utils.data import DataLoader
 
-from dataset import ClassificationDataset
 from model import ClassificationModel
-from params import BATCH_SIZE, NUM_WORKERS, PIN_MEMORY, IMG_TEST_DIR, LOAD_MODEL_FILE, NO_OF_CLASSES, DEVICE
+from params import configs, DEVICE
 from train_network.clasification.data_loader import get_test_loader
 
 
 def test():
-    model = ClassificationModel(num_classes=NO_OF_CLASSES).to(DEVICE)
-    checkpoint = torch.load(LOAD_MODEL_FILE)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    model = ClassificationModel(num_classes=configs["data"]["no_of_classes"]).to(DEVICE)
+    checkpoint = torch.load(configs["data"]["no_of_classes"])
+    model.load_state_dict(checkpoint['model']['model_load_path'])
 
     test_loader = get_test_loader()
 
