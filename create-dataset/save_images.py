@@ -18,7 +18,7 @@ class ExtractTypes(enum.Enum):
 
 
 class Clips:
-    _supported_extensions = ['avi']
+    _supported_extensions = ['avi', 'mp4']
 
     def __init__(self, path, _type, dest=""):
         self._path = path
@@ -58,7 +58,7 @@ class Clips:
                     self.type_dict[_clip_type] += 1
                     save_image()
             elif self._extract_type == ExtractTypes.auto:
-                if frame_position % 50 == 0:
+                if frame_position % 25 == 0:
                     self.type_dict[_clip_type] += 1
                     save_image()
             frame_position += 1
@@ -82,8 +82,8 @@ class Clips:
 
 
 if __name__ == '__main__':
-    path_to_clips = "../clips2"
-    destination = "extracted_images2"
+    path_to_clips = "../clips_3c"
+    destination = "extracted_images3"
     _type = ExtractTypes.auto
     clip_obj = Clips(path_to_clips, _type, dest=destination)
     clip_obj.extract()

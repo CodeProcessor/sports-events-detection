@@ -38,6 +38,9 @@ class DataFile:
         print(self.data.head(100))
         RowData.set_fps(fps)
 
+    def get_shape(self):
+        return self.data.shape
+
     def __get_time_in_secs(self, time_str: str) -> int:
         _time_split = time_str.split('.')
         _time_in_seconds = 0
