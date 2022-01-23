@@ -19,6 +19,10 @@ class SportsEventsDetection:
         self.video_path = '/home/dulanj/MSc/DialogRugby/out-s-20_30-e-23_30-match-16.mp4'
         db_name = os.path.basename(self.video_path).split('.')[0] + '.db'
         self.storage = Storage(db_name)
+        self.classes = {
+            0: 'scrum',
+            1: 'line_out'
+        }
 
     def load_model(self):
         """
@@ -45,7 +49,18 @@ class SportsEventsDetection:
 
         return is_model_inference, data_json
 
-    def main(self):
+    def draw_info(self, frame, data_json):
+        # Visualize
+        for det in data_json['scrum_lineout_pred']:
+            _class_id = int(det[-1])
+            cv2.rectangle(frame, (int(det[0]), int(det[1])), (int(det[2]), int(det[3])), (0, 0, 255), 2)
+            cv2.putText(frame, self.classes[_class_id], (int(det[0]), int(det[1])), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                        (0, 255, 255), 2)
+        cv2.putText(frame, 'Frame: {}'.format(data_json['frame_id']), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    (0, 255, 0), 2)
+        return frame
+
+    def video_loop(self):
         cap = cv2.VideoCapture(self.video_path)
         frame_count = 0
         ret, frame = cap.read()
@@ -64,12 +79,9 @@ class SportsEventsDetection:
                 self.storage.insert_bulk_data(bulk_data)
                 bulk_data = []
 
-            # Visualize
-            for det in data_json['scrum_lineout_pred']:
-                cv2.rectangle(frame, (int(det[0]), int(det[1])), (int(det[2]), int(det[3])), (0, 0, 255), 2)
+            frame = self.draw_info(frame, data_json)
 
             cv2.imshow('frame', frame)
-            cv2.waitKey(1)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
             ret, frame = cap.read()
@@ -81,4 +93,4 @@ class SportsEventsDetection:
 
 if __name__ == '__main__':
     sed = SportsEventsDetection()
-    sed.main()
+    sed.video_loop()
