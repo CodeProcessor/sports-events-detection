@@ -28,7 +28,12 @@ class Clips:
         self._destination = dest
         self.type_dict = dict()
 
-    def extract_clip(self, clip_path, _clip_type):
+    def extract_clip(self, clip_path):
+        _clip_info = self.clip_info(clip_path)
+        _clip_type = _clip_info['type']
+        _match_id = _clip_info['match_id']
+        _start_pos = _clip_info['start_pos']
+
         video_clip = cv2.VideoCapture(clip_path)
         ret, frame = video_clip.read()
         frame_position = 1
@@ -41,8 +46,9 @@ class Clips:
                 return 0
 
             def save_image():
+                self.type_dict[_clip_type] += 1
                 _file_name = os.path.join(self._destination, _clip_type,
-                                          f"{_clip_type}_{self.type_dict[_clip_type]}.jpg")
+                                          f"{_clip_type}_{_match_id:02d}_{_start_pos + frame_position}.jpg")
                 _dir_name = os.path.dirname(_file_name)
                 if not os.path.exists(_dir_name):
                     os.makedirs(_dir_name)
@@ -55,11 +61,9 @@ class Clips:
                 c = cv2.waitKey(0)
                 print(c)
                 if c == 115:
-                    self.type_dict[_clip_type] += 1
                     save_image()
             elif self._extract_type == ExtractTypes.auto:
                 if frame_position % 25 == 0:
-                    self.type_dict[_clip_type] += 1
                     save_image()
             frame_position += 1
             ret, frame = video_clip.read()
@@ -70,20 +74,27 @@ class Clips:
         _type = _name.split('_')[-1]
         if not (_type in self.type_dict.keys()):
             self.type_dict[_type] = 0
-        return _type
+        _start_pos = _name.split('_')[-3]
+        _end_pos = _name.split('_')[-2]
+        _match_id = _name.split('_')[-4]
+        return {
+            'type': _type,
+            'start_pos': int(_start_pos),
+            'end_pos': int(_end_pos),
+            'match_id': int(_match_id)
+        }
 
     def extract(self):
         for clip in glob.glob(self._path + "/*.*"):
             print(clip)
             ext = clip.split('.')[-1]
             if ext in Clips._supported_extensions:
-                _type = self.clip_info(clip)
-                self.extract_clip(clip, _type)
+                self.extract_clip(clip)
 
 
 if __name__ == '__main__':
-    path_to_clips = "../clips_3c"
-    destination = "extracted_images3"
+    path_to_clips = "../clip-extract-tool/data/clips_2c_7m"
+    destination = "extracted_images4"
     _type = ExtractTypes.auto
     clip_obj = Clips(path_to_clips, _type, dest=destination)
     clip_obj.extract()

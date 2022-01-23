@@ -25,8 +25,8 @@ class RowData:
 
 
 class RowNames(enum.Enum):
-    start_time = 14
-    end_time = 15
+    start_time = 3
+    end_time = 4
     activity = 2
     team = 1
 
@@ -77,7 +77,7 @@ class DataFile:
         if "Kick" in _activity:
             _activity_type = EventTypes.kick
         elif "Line" in _activity:
-            _activity_type = EventTypes.line_out
+            _activity_type = EventTypes.lineout
         elif "Scrum" in _activity:
             _activity_type = EventTypes.scrum
         elif "play" in _activity:
