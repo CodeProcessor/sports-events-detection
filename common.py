@@ -7,7 +7,7 @@ import enum
 
 
 class EventTypes(enum.Enum):
-    line_out = 0
+    lineout = 0
     kick = 1
     scrum = 2
     other = 3
