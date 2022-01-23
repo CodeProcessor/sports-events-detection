@@ -3,9 +3,7 @@ Created on 6/6/21
 
 @author: dulanj
 '''
-import threading
 import time
-from queue import Queue
 
 import cv2
 
@@ -30,7 +28,7 @@ class VideoReader():
         if self.__cap.isOpened():
             self.__fps = self.__cap.get(cv2.CAP_PROP_FPS)
         else:
-            raise Exception("Video didnt open")
+            raise Exception("Video didnt open: {}".format(self.__filename))
 
     def get_fps(self) -> int:
         return int(self.__fps)
@@ -70,7 +68,7 @@ class VideoReader():
     def read_frame(self):
         ret, frame = self.__cap.read()
         self.__frame_count += 1
-        return frame
+        return frame if ret else None
 
     def seek(self, timestamp: int):
         if timestamp < self.__frame_count:

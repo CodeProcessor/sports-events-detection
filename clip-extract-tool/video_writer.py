@@ -30,9 +30,12 @@ class SEDVideoWriter:
         self.__video_writer.write(frame)
 
     def clean(self):
-        self.__video_writer.release()
-        self.__video_writer = None
-        print(f"{self.__filename} saved!")
+        if self.__video_writer is not None:
+            self.__video_writer.release()
+            self.__video_writer = None
+            print(f"{self.__filename} saved!")
+        else:
+            print(f"{self.__filename} not saved!")
 
 
 if __name__ == '__main__':
