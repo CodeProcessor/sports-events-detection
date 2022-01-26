@@ -5,7 +5,6 @@
 @Time:        12/01/2022 00:17
 """
 import logging
-import os
 
 import cv2
 
@@ -14,23 +13,20 @@ from yolo_model import YoloModel
 
 
 class SportsEventsDetection:
-    def __init__(self):
+    def __init__(self, video_path, db_name, weights_path, classes):
         self.model = None
-        self.video_path = '/home/dulanj/MSc/DialogRugby/out-s-20_30-e-23_30-match-16.mp4'
-        db_name = os.path.basename(self.video_path).split('.')[0] + '.db'
+        self.video_path = video_path
         self.storage = Storage(db_name)
-        self.classes = {
-            0: 'scrum',
-            1: 'line_out'
-        }
+        self.weights_path = weights_path
+        self.classes = classes
 
     def load_model(self):
         """
 
         :return:
         """
-        weight_path = '/home/dulanj/MSc/yolov5/runs/train/exp5/weights/best.pt'
-        model = YoloModel(weight_path)
+
+        model = YoloModel(self.weights_path)
         return model
 
     def get_data(self, frame_count, frame):
@@ -53,9 +49,10 @@ class SportsEventsDetection:
         # Visualize
         for det in data_json['scrum_lineout_pred']:
             _class_id = int(det[-1])
+            _confidence = round(float(det[-2]), 2)
             cv2.rectangle(frame, (int(det[0]), int(det[1])), (int(det[2]), int(det[3])), (0, 0, 255), 2)
-            cv2.putText(frame, self.classes[_class_id], (int(det[0]), int(det[1])), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                        (0, 255, 255), 2)
+            cv2.putText(frame, f"{self.classes[_class_id]}-{_confidence}", (int(det[0]), int(det[1])),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
         cv2.putText(frame, 'Frame: {}'.format(data_json['frame_id']), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (0, 255, 0), 2)
         return frame
@@ -89,8 +86,3 @@ class SportsEventsDetection:
 
         cap.release()
         cv2.destroyAllWindows()
-
-
-if __name__ == '__main__':
-    sed = SportsEventsDetection()
-    sed.video_loop()
