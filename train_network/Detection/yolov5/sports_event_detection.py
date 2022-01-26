@@ -9,23 +9,22 @@ import logging
 import cv2
 
 from storage import Storage
+from video_reader import VideoReader
 from yolo_model import YoloModel
 
 
 class SportsEventsDetection:
     def __init__(self, video_path, db_name, weights_path, classes):
         self.model = None
-        self.video_path = video_path
+        self.video = VideoReader(video_path)
         self.storage = Storage(db_name)
         self.weights_path = weights_path
         self.classes = classes
 
     def load_model(self):
         """
-
         :return:
         """
-
         model = YoloModel(self.weights_path)
         return model
 
@@ -57,13 +56,13 @@ class SportsEventsDetection:
                     (0, 255, 0), 2)
         return frame
 
-    def video_loop(self):
-        cap = cv2.VideoCapture(self.video_path)
-        frame_count = 0
-        ret, frame = cap.read()
+    def video_loop(self, skip_frames=0):
+        frame_count = skip_frames
+        self.video.seek(skip_frames)
+        frame = self.video.read_frame()
         bulk_data = []
 
-        while ret:
+        while frame is not None:
             frame_count += 1
             if frame_count % 100 == 0:
                 print('Processing frame {}'.format(frame_count))
@@ -81,8 +80,9 @@ class SportsEventsDetection:
             cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-            ret, frame = cap.read()
+            frame = self.video.read_frame()
+
         self.storage.insert_bulk_data(bulk_data)
 
-        cap.release()
+        self.video.cleanup()
         cv2.destroyAllWindows()

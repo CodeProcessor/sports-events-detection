@@ -76,6 +76,7 @@ class VideoReader():
 
         while timestamp > self.__frame_count:
             self.__grab_frame()
+        print(f"Seek done: {self.__frame_count}")
         return 0
 
     def seek_n_read(self, timestamp: int):
