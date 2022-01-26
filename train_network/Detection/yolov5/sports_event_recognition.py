@@ -10,15 +10,12 @@ from collections import deque
 from storage import Storage
 
 
-class EventFinder:
-    def __init__(self):
-        video_path = '/home/dulanj/MSc/DialogRugby/out-s-20_30-e-40_00-match-16.mp4'
-        db_name = os.path.basename(video_path).split('.')[0] + '.db'
+class SportsEventsRecognition:
+    def __init__(self, video_path, db_name, classes):
+        self.model = None
+        self.video_path = video_path
         self.storage = Storage(db_name)
-        self.classes = {
-            0: 'scrum',
-            1: 'line_out'
-        }
+        self.classes = classes
         self.class_reverse = {v: k for k, v in self.classes.items()}
 
     def get_moving_average(self, queue, event_name):
@@ -61,5 +58,11 @@ class EventFinder:
 
 
 if __name__ == '__main__':
-    ef = EventFinder()
+    video_path = '/home/dulanj/MSc/DialogRugby/out-s-20_30-e-40_00-match-16.mp4'
+    db_name = os.path.basename(video_path).split('.')[0] + '.db'
+    classes = {
+        0: 'scrum',
+        1: 'line_out'
+    }
+    ef = SportsEventsRecognition(video_path, db_name, classes)
     ef.find_event('scrum')
