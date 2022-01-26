@@ -54,19 +54,22 @@ class Storage:
         data = self.con.execute(sql, (frame_id,)).fetchone()
         return json.loads(data[0]) if data is not None else None
 
+    def update_data(self, frame_id, data):
+        sql = 'UPDATE DATA SET data = ? WHERE frame_id = ?'
+        self.cur.execute(sql, (json.dumps(data), frame_id))
+        self.con.commit()
+
     def __del__(self):
         self.con.close()
 
 
 if __name__ == '__main__':
     storage = Storage('storage_1.db')
-    storage.insert_data(1, {'b': 2})
-    storage.insert_data(2, {'b': 2})
-    storage.insert_data(3, {'c': 3})
-    storage.insert_data(4, {'a': [1, 2, 3]})
-    storage.insert_bulk_data([{'frame_id': 5, 'data': {'a': 1}}, {'frame_id': 6, 'data': {'a': 2}}])
+    storage.insert_bulk_data([{'frame_id': 1, 'data': {'a': 1}}, {'frame_id': 2, 'data': {'a': 2}}])
     print(storage.get_data(1))
     print(storage.get_data(2))
     print(storage.get_data(3))
-    print(storage.get_data(4))
-    print(storage.get_data(11))
+    storage.update_data(1, {'a': 3, 'b': 4})
+    print(storage.get_data(1))
+    print(storage.get_data(2))
+    print(storage.get_data(3))
