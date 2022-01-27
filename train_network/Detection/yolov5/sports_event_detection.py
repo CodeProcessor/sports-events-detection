@@ -69,8 +69,8 @@ class SportsEventsDetection:
         while frame is not None:
             frame_count += 1
             if frame_count % viz_count == 0:
-                _fps = viz_count / (time.time() - start_time) if start_time is not None else 'N/A'
-                print('Processing frame {} @ {:.2f} fps'.format(frame_count, _fps))
+                _fps = "{:.2f}".format(viz_count / (time.time() - start_time)) if start_time is not None else 'N/A'
+                print('Processing frame {} @ {} fps'.format(frame_count, _fps))
                 start_time = time.time()
 
             is_store, data_json = self.get_data(frame_count, frame)

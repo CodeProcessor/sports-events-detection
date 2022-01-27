@@ -8,12 +8,13 @@ import os
 from collections import deque
 
 from storage import Storage
+from video_reader import VideoReader
 
 
 class SportsEventsRecognition:
     def __init__(self, video_path, db_name, classes, logic="default"):
         self.model = None
-        self.video_path = video_path
+        self.video = VideoReader(video_path)
         self.storage = Storage(db_name)
         self.classes = classes
         self.logic = logic
@@ -53,15 +54,17 @@ class SportsEventsRecognition:
         return _classes_count / len(queue)
 
     def frame_to_time(self, frame_id):
-        seconds = frame_id / 30
+        seconds = frame_id / self.video.get_fps()
         minutes = seconds // 60
+        hours = minutes // 60
         seconds = seconds % 60
-        return "{:02d}:{:02d}".format(int(minutes), int(seconds))
+        minutes = minutes % 60
+        return "{:02d}:{:02d}:{:02d}".format(int(hours), int(minutes), int(seconds))
 
     def find_event(self, event_name):
         _max_len = 100
         queue = deque(maxlen=_max_len)
-        for frame_id in range(1, 50000):
+        for frame_id in range(1, 250000):
             data = self.storage.get_data(frame_id)
             queue.append(data)
             # print(data)
