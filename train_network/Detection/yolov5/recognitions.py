@@ -20,5 +20,15 @@ def scrum_lineout_recognition():
     ef.find_event('scrum')
 
 
+def play_recognition():
+    video_path = '"/home/dulanj/MSc/DialogRugby/Match#16_CR_&_FC_v_Army_SC_DRL_2019_20.mp4"'
+    db_name = os.path.basename(video_path).split('.')[0] + '_play.db'
+    classes = {
+        0: 'digital'
+    }
+    ef = SportsEventsRecognition(video_path, db_name, classes, logic="banner")
+    ef.find_event('digital')
+
+
 if __name__ == '__main__':
-    scrum_lineout_recognition()
+    play_recognition()
