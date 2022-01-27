@@ -90,7 +90,11 @@ class YoloModel:
         classes = None
         pred_out = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
         det = pred_out[0]
-        det[:, :4] = scale_coords(self.resized_image_shape, det[:, :4], self.ori_image_shape).round()
+        det[:, :4] = scale_coords(self.resized_image_shape, det[:, :4], self.ori_image_shape)
+        det[:, 0] = det[:, 0] / self.ori_image_shape[1]
+        det[:, 1] = det[:, 1] / self.ori_image_shape[0]
+        det[:, 2] = det[:, 2] / self.ori_image_shape[1]
+        det[:, 3] = det[:, 3] / self.ori_image_shape[0]
         return det.cpu().numpy()
 
     def predict(self, image):
@@ -109,8 +113,9 @@ if __name__ == '__main__':
     model = YoloModel(model_file_path)
     ret = model.predict(image)
     print(ret)
+    h, w = image.shape[:2]
     for det in ret:
         print(det)
-        cv2.rectangle(image, (int(det[0]), int(det[1])), (int(det[2]), int(det[3])), (0, 255, 0), 2)
+        cv2.rectangle(image, (int(det[0] * w), int(det[1] * h)), (int(det[2] * w), int(det[3] * h)), (0, 255, 0), 2)
     cv2.imshow("image", image)
     cv2.waitKey(0)
