@@ -15,6 +15,7 @@ class VideoReader():
         self.__cap = None
 
         self.__fps = 0
+        self.__frame_shape = (0, 0)
         self.init_capture()
         self.__processing_fps = 0
         self.__frame_count = 0
@@ -27,6 +28,11 @@ class VideoReader():
         self.__frame_count = 0
         if self.__cap.isOpened():
             self.__fps = self.__cap.get(cv2.CAP_PROP_FPS)
+            # get vcap property
+            width = self.__cap.get(3)  # float `width`
+            height = self.__cap.get(4)  # float `height`
+            self.__frame_shape = (int(height), int(width))
+            print("Video properties: ", self.__frame_shape, self.__fps)
         else:
             raise Exception("Video didnt open: {}".format(self.__filename))
 
@@ -48,16 +54,8 @@ class VideoReader():
                 if _key == 27:
                     break
 
-    # def run(self) -> None:
-    #     while True:
-    #         if not self.__frame_queue.full():
-    #             ret, frame = self.__cap.read()
-    #
-    #             if ret:
-    #                 self.__frame_queue.put(frame)
-    #
-    # def read(self):
-    #     return self.__frame_queue.get()
+    def get_shape(self):
+        return self.__frame_shape
 
     def __grab_frame(self):
         self.__cap.grab()
@@ -95,6 +93,6 @@ class VideoReader():
 
 
 if __name__ == "__main__":
-    file_path = "/home/dulanj/MSc/Research/CH & FC v Kandy SC - DRL 2019_20 Match #23.mp4"
+    file_path = "/home/dulanj/MSc/DialogRugby/match-16.mp4"
     obj = VideoReader(file_path)
     obj.visualize()
