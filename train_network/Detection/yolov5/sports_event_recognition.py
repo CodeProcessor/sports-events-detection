@@ -11,12 +11,32 @@ from storage import Storage
 
 
 class SportsEventsRecognition:
-    def __init__(self, video_path, db_name, classes):
+    def __init__(self, video_path, db_name, classes, logic="default"):
         self.model = None
         self.video_path = video_path
         self.storage = Storage(db_name)
         self.classes = classes
+        self.logic = logic
         self.class_reverse = {v: k for k, v in self.classes.items()}
+
+    def is_correct_event(self, event, event_name):
+        ret = False
+        _is_same_event = int(event[-1]) == self.class_reverse[event_name]
+        if self.logic == "default":
+            if _is_same_event:
+                print(event)
+                ret = True
+        elif self.logic == "banner":
+            _width = event[2] - event[0]
+            _height = event[3] - event[1]
+            _covered_area = _width * _height
+            if _is_same_event and _covered_area > 0.4:
+                # print(event)
+                ret = True
+        else:
+            raise NotImplementedError
+
+        return ret
 
     def get_moving_average(self, queue, event_name):
         """
@@ -25,12 +45,10 @@ class SportsEventsRecognition:
         :return:
         """
         _classes_count = 0
-        # events = [data for data in queue if data is not None and "scrum_lineout_pred" in data]
         for data in queue:
-            if data is not None and "scrum_lineout_pred" in data:
-                # print(data)
-                for event in data["scrum_lineout_pred"]:
-                    if int(event[-1]) == self.class_reverse[event_name]:
+            if data is not None and "data" in data:
+                for event in data["data"]:
+                    if self.is_correct_event(event, event_name):
                         _classes_count += 1
         return _classes_count / len(queue)
 
@@ -43,7 +61,7 @@ class SportsEventsRecognition:
     def find_event(self, event_name):
         _max_len = 100
         queue = deque(maxlen=_max_len)
-        for frame_id in range(1, 50000, 5):
+        for frame_id in range(1, 50000):
             data = self.storage.get_data(frame_id)
             queue.append(data)
             # print(data)
