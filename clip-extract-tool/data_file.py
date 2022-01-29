@@ -80,10 +80,12 @@ class DataFile:
             _activity_type = EventTypes.lineout
         elif "Scrum" in _activity:
             _activity_type = EventTypes.scrum
-        elif "play" in _activity:
-            _activity_type = EventTypes.play
         elif "noplay" in _activity:
             _activity_type = EventTypes.noplay
+        elif "play" in _activity:
+            _activity_type = EventTypes.play
+        else:
+            raise NotImplementedError(f"Unknown activity: {_activity}")
         return RowData(_start_time_in_seconds, _duration, _team, _activity_type)
 
 
