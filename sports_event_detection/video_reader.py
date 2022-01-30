@@ -9,7 +9,7 @@ import cv2
 
 
 class VideoReader():
-    def __init__(self, filename: str):
+    def __init__(self, filename: str, verbose: bool = False):
 
         self.__filename = filename
         self.__cap = None
@@ -19,6 +19,8 @@ class VideoReader():
         self.init_capture()
         self.__processing_fps = 0
         self.__frame_count = 0
+        self.verbose = verbose
+        self.read_fps_timestamp = 1
         # self.__frame_queue = Queue(maxsize=5)
 
         # super().__init__()
@@ -49,8 +51,8 @@ class VideoReader():
                 cv2.imshow('display', frame)
                 _key = cv2.waitKey(1)
                 if self.__frame_count % 10 == 0:
-                    self.__fps = self.__frame_count / (time.time() - start_time)
-                    print(f"FPS:{self.__fps}")
+                    fps = self.__frame_count / (time.time() - start_time)
+                    print(f"FPS:{fps}")
                 if _key == 27:
                     break
 
@@ -66,7 +68,21 @@ class VideoReader():
     def read_frame(self):
         ret, frame = self.__cap.read()
         self.__frame_count += 1
+        if self.verbose:
+            interval = 100
+            if self.__frame_count % interval == 0:
+                print("Read FPS: ", interval / (time.time() - self.read_fps_timestamp))
+                self.read_fps_timestamp = time.time()
+
         return frame if ret else None
+
+    def get_video_time(self):
+        seconds = self.__frame_count / self.get_fps()
+        minutes = seconds // 60
+        hours = minutes // 60
+        seconds = seconds % 60
+        minutes = minutes % 60
+        return "{:02d}:{:02d}:{:02d}".format(int(hours), int(minutes), int(seconds))
 
     def seek(self, timestamp: int):
         if timestamp < self.__frame_count:
