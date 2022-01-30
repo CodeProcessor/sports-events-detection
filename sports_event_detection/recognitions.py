@@ -6,12 +6,12 @@
 """
 import os
 
-from sports_event_recognition import SportsEventsRecognition
+from sports_event_detection.event_recognition import SportsEventsRecognition
 
 
 def scrum_lineout_recognition():
     video_path = '/home/dulanj/MSc/DialogRugby/out-s-20_30-e-40_00-match-16.mp4'
-    db_name = os.path.basename(video_path).split('.')[0] + '.db'
+    db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
     classes = {
         0: 'scrum',
         1: 'line_out'
@@ -22,7 +22,7 @@ def scrum_lineout_recognition():
 
 def play_recognition():
     video_path = '/home/dulanj/MSc/DialogRugby/Match#16_CR_&_FC_v_Army_SC_DRL_2019_20.mp4'
-    db_name = os.path.basename(video_path).split('.')[0] + '_play.db'
+    db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '_play.db')
     classes = {
         0: 'digital'
     }

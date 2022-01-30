@@ -9,9 +9,9 @@ import time
 
 import cv2
 
-from storage import Storage
-from video_reader import VideoReader
-from yolo_model import YoloModel
+from sports_event_detection.storage import Storage
+from sports_event_detection.video_reader import VideoReader
+from sports_event_detection.yolo_model import YoloModel
 
 
 class SportsEventsDetection:

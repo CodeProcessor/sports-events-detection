@@ -4,7 +4,7 @@
 @Author:      dulanj
 @Time:        27/01/2022 22:20
 """
-from storage import Storage
+from sports_event_detection.storage import Storage
 
 if __name__ == '__main__':
     storage = Storage('Match#16_CR_&_FC_v_Army_SC_DRL_2019_20_event.db')

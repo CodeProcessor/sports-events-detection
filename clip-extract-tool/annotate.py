@@ -6,7 +6,7 @@
 """
 import os
 
-from annotator import Annotate
+from sports_event_detection.annotator import Annotate
 
 
 def annotate_events():
