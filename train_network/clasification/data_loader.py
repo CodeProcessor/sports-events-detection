@@ -11,17 +11,20 @@ from torchvision.transforms import transforms, Compose
 from dataset import ClassificationDataset
 from params import *
 
-transform = Compose([
-    transforms.Resize((int(configs["model"]["input_width"]), int(configs["model"]["input_height"]))),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=configs["model"]["mean"], std=configs["model"]["std"])
-])
+
+def get_transform():
+    transform = Compose([
+        transforms.Resize((int(configs["model"]["input_width"]), int(configs["model"]["input_height"]))),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=configs["model"]["mean"], std=configs["model"]["std"])
+    ])
+    return transform
 
 
 def get_train_loader():
     train_dataset = ClassificationDataset(
-        transform=transform,
+        transform=get_transform(),
         image_dir=os.path.join(configs["data"]["image_dir"], configs["data"]["image_train_dir"]),
     )
 
@@ -30,7 +33,7 @@ def get_train_loader():
 
 def get_val_loader():
     test_dataset = ClassificationDataset(
-        transform=transform,
+        transform=get_transform(),
         image_dir=os.path.join(configs["data"]["image_dir"], configs["data"]["image_val_dir"]),
         test=True
     )
@@ -39,7 +42,7 @@ def get_val_loader():
 
 def get_test_loader():
     test_dataset = ClassificationDataset(
-        transform=transform,
+        transform=get_transform(),
         image_dir=os.path.join(configs["data"]["image_dir"], configs["data"]["image_test_dir"]),
         test=True
     )

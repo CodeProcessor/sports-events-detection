@@ -6,14 +6,19 @@
 import torch
 
 from data_loader import get_test_loader
-from model import ClassificationModel
 from params import configs, DEVICE
+from pretrained_models import initialize_model
 
 
 def test():
-    model = ClassificationModel(num_classes=configs["data"]["no_of_classes"]).to(DEVICE)
-    checkpoint = torch.load(configs["data"]["no_of_classes"])
-    model.load_state_dict(checkpoint['model']['model_load_path'])
+    # model = ClassificationModel(num_classes=configs["data"]["no_of_classes"]).to(DEVICE)
+    model_name = "resnet"
+    num_classes = 2
+    feature_extract = False
+    model, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=False)
+    model_file_name = configs["model"]["model_load_path"]
+    checkpoint = torch.load(model_file_name)
+    model.load_state_dict(checkpoint['model_state_dict'])
 
     test_loader = get_test_loader()
 
