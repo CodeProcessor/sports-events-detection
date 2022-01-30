@@ -12,9 +12,10 @@ from dataset import ClassificationDataset
 from params import *
 
 transform = Compose([
-    transforms.Resize((64, 64)),
+    transforms.Resize((int(configs["model"]["input_width"]), int(configs["model"]["input_height"]))),
+    transforms.CenterCrop(224),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[1, 1, 1])
+    transforms.Normalize(mean=configs["model"]["mean"], std=configs["model"]["std"])
 ])
 
 

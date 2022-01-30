@@ -4,16 +4,20 @@
 @Author:      dulanj
 @Time:        2021-08-23 14.42
 """
+import ssl
+
 import numpy as np
 import torch.nn as nn
-import wandb
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
 
+import wandb
 from data_loader import get_train_loader, get_val_loader
-from model import ClassificationModel
 from params import *
+from pretrained_models import initialize_model
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class Compose(object):
@@ -27,7 +31,7 @@ class Compose(object):
         return img, boxes
 
 
-loss_func = nn.CrossEntropyLoss()
+loss_func = nn.CrossEntropyLoss().cuda()
 
 
 def train_fn(train_loader, model, optimizer, loss_fn):
@@ -83,8 +87,13 @@ def val_fn(val_loader, model, loss_fn):
 
 
 def main():
-    model = ClassificationModel(num_classes=configs["data"]["no_of_classes"]).to(DEVICE)
-    # model = torch.hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True)
+    # model = ClassificationModel(num_classes=configs["data"]["no_of_classes"]).to(DEVICE)
+    # model = torch.hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True).to(DEVICE)
+    model_name = "resnet"
+    num_classes = 2
+    feature_extract = False
+    model, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
+    print(input_size)
 
     optimizer = optim.Adam(
         model.parameters(), lr=configs["model"]["lr"], weight_decay=configs["model"]["weight_decay"])

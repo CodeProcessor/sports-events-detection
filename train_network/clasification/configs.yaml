@@ -11,6 +11,10 @@ model:
   save_model: True
   model_save_path: ../../data/trained_models/play_noplay/best-model-parameters3.pt
   model_load_path: ../../data/trained_models/play_noplay/best-model-parameters3.pt
+  input_width: 224
+  input_height: 224
+  mean: [ 0.485, 0.456, 0.406 ]
+  std: [ 0.229, 0.224, 0.225 ]
 
 data:
   image_dir: ../../data/dataset_pnp/
