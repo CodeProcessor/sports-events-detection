@@ -4,13 +4,12 @@
 @Author:      dulanj
 @Time:        04/12/2021 12:50
 """
-import os
 
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms, Compose
 
-from train_network.clasification.dataset import ClassificationDataset
-from train_network.clasification.params import *
+from dataset import ClassificationDataset
+from params import *
 
 transform = Compose([
     transforms.Resize((64, 64)),

@@ -10,7 +10,7 @@ import os
 import torch
 from PIL import Image
 
-from train_network.clasification.params import configs
+from params import configs
 
 
 class ClassificationDataset(torch.utils.data.Dataset):

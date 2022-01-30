@@ -6,14 +6,14 @@
 """
 import numpy as np
 import torch.nn as nn
+import wandb
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
 
-import wandb
+from data_loader import get_train_loader, get_val_loader
 from model import ClassificationModel
 from params import *
-from train_network.clasification.data_loader import get_train_loader, get_val_loader
 
 
 class Compose(object):
@@ -84,6 +84,8 @@ def val_fn(val_loader, model, loss_fn):
 
 def main():
     model = ClassificationModel(num_classes=configs["data"]["no_of_classes"]).to(DEVICE)
+    # model = torch.hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True)
+
     optimizer = optim.Adam(
         model.parameters(), lr=configs["model"]["lr"], weight_decay=configs["model"]["weight_decay"])
     current_loss = 10000

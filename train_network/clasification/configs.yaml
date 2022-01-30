@@ -9,11 +9,11 @@ model:
   pin_memory: True
   load_model: False
   save_model: True
-  model_save_path: ../../data/trained_models/play_noplay/best-model-parameters2.pt
-  model_load_path: ../../data/trained_models/play_noplay/best-model-parameters2.pt
+  model_save_path: ../../data/trained_models/play_noplay/best-model-parameters3.pt
+  model_load_path: ../../data/trained_models/play_noplay/best-model-parameters3.pt
 
 data:
-  image_dir: ../../data/dataset2/
+  image_dir: ../../data/dataset_pnp/
   image_train_dir: train
   image_test_dir: test
   image_val_dir: val

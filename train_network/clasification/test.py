@@ -5,9 +5,9 @@
 """
 import torch
 
+from data_loader import get_test_loader
 from model import ClassificationModel
 from params import configs, DEVICE
-from train_network.clasification.data_loader import get_test_loader
 
 
 def test():
