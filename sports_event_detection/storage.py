@@ -49,6 +49,14 @@ class Storage:
         except sl.IntegrityError:
             logging.error('Duplicate frame_id')
 
+    def delete_bulk_data(self, frame_id_list):
+        sql = 'DELETE FROM DATA WHERE frame_id = ?'
+        data = [
+            (int(frame_id),) for frame_id in frame_id_list
+        ]
+        self.cur.executemany(sql, data)
+        self.con.commit()
+
     def get_data(self, frame_id):
         sql = 'SELECT data FROM DATA WHERE frame_id = ?'
         data = self.con.execute(sql, (frame_id,)).fetchone()

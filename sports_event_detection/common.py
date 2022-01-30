@@ -13,3 +13,9 @@ class EventTypes(enum.Enum):
     other = 3
     play = 4
     noplay = 5
+
+
+class ModelNames(enum.Enum):
+    scrum_lineout_object_detection_model = 0
+    digital_object_detection_model = 1
+    play_noplay_classification_model = 2
