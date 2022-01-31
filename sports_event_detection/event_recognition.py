@@ -12,11 +12,12 @@ from video_reader import VideoReader
 
 
 class SportsEventsRecognition:
-    def __init__(self, video_path, db_name, classes, logic="default"):
+    def __init__(self, video_path, db_name, classes, model_name, logic="default"):
         self.model = None
         self.video = VideoReader(video_path)
         self.storage = Storage(db_name)
         self.classes = classes
+        self.model_name = model_name
         self.logic = logic
         self.class_reverse = {v: k for k, v in self.classes.items()}
 
@@ -48,7 +49,7 @@ class SportsEventsRecognition:
         _classes_count = 0
         for data in queue:
             if data is not None and "data" in data:
-                for event in data["data"]:
+                for event in data["data"][self.model_name]:
                     if self.is_correct_event(event, event_name):
                         _classes_count += 1
         return _classes_count / len(queue)
@@ -62,7 +63,7 @@ class SportsEventsRecognition:
         return "{:02d}:{:02d}:{:02d}".format(int(hours), int(minutes), int(seconds))
 
     def find_event(self, event_name):
-        _max_len = 100
+        _max_len = int(5 * self.video.get_fps())
         queue = deque(maxlen=_max_len)
         for frame_id in range(1, 250000):
             data = self.storage.get_data(frame_id)
