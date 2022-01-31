@@ -15,6 +15,7 @@ class VideoReader():
         self.__cap = None
 
         self.__fps = 0
+        self.__total_frame_count = 0
         self.__frame_shape = (0, 0)
         self.init_capture()
         self.__processing_fps = 0
@@ -30,6 +31,7 @@ class VideoReader():
         self.__frame_count = 0
         if self.__cap.isOpened():
             self.__fps = self.__cap.get(cv2.CAP_PROP_FPS)
+            self.__total_frame_count = int(self.__cap.get(cv2.CAP_PROP_FRAME_COUNT))
             # get vcap property
             width = self.__cap.get(3)  # float `width`
             height = self.__cap.get(4)  # float `height`
@@ -41,8 +43,15 @@ class VideoReader():
     def get_fps(self) -> int:
         return int(self.__fps)
 
-    def visualize(self):
+    def get_total_frame_count(self):
+        return self.__total_frame_count
+
+    def get_video_duration(self):
+        return self.get_video_time(self.__total_frame_count)
+
+    def visualize(self, fps: int = None):
         start_time = time.time()
+        _viz_fps_count = 100
         while True:
             ret, frame = self.__cap.read()
 
@@ -50,8 +59,9 @@ class VideoReader():
                 self.__frame_count += 1
                 cv2.imshow('display', frame)
                 _key = cv2.waitKey(1)
-                if self.__frame_count % 10 == 0:
-                    fps = self.__frame_count / (time.time() - start_time)
+                if self.__frame_count % _viz_fps_count == 0:
+                    fps = _viz_fps_count / (time.time() - start_time)
+                    start_time = time.time()
                     print(f"FPS:{fps}")
                 if _key == 27:
                     break
@@ -76,8 +86,10 @@ class VideoReader():
 
         return frame if ret else None
 
-    def get_video_time(self):
-        seconds = self.__frame_count / self.get_fps()
+    def get_video_time(self, frame_count=None):
+        if frame_count is None:
+            frame_count = self.__frame_count
+        seconds = frame_count / self.get_fps()
         minutes = seconds // 60
         hours = minutes // 60
         seconds = seconds % 60
@@ -97,6 +109,11 @@ class VideoReader():
         self.seek(timestamp)
         return self.read_frame()
 
+    def seek_time(self, time_str: str):
+        hh, mm, ss = time_str.split(":")
+        timestamp = (int(hh) * 3600 + int(mm) * 60 + int(ss)) * self.get_fps()
+        return self.seek(timestamp)
+
     def __del__(self):
         self.cleanup()
 
@@ -111,4 +128,9 @@ class VideoReader():
 if __name__ == "__main__":
     file_path = "/home/dulanj/MSc/DialogRugby/match-16.mp4"
     obj = VideoReader(file_path)
+    print("FPS: ", obj.get_fps())
+    print("Shape: ", obj.get_shape())
+    print("Total frame count: ", obj.get_total_frame_count())
+    print("Duration: ", obj.get_video_duration())
+    obj.seek_time("00:30:09")
     obj.visualize()
