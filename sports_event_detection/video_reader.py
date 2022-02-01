@@ -6,6 +6,7 @@ Created on 6/6/21
 import time
 
 import cv2
+from PIL import Image
 
 
 class VideoReader():
@@ -75,16 +76,22 @@ class VideoReader():
         if self.__frame_count % 1000 == 0:
             print(f"Grab: {self.__frame_count}")
 
-    def read_frame(self):
-        ret, frame = self.__cap.read()
+    def read_frame(self, pil_image=False):
+        _is_frame, frame = self.__cap.read()
         self.__frame_count += 1
         if self.verbose:
             interval = 100
             if self.__frame_count % interval == 0:
                 print("Read FPS: ", interval / (time.time() - self.read_fps_timestamp))
                 self.read_fps_timestamp = time.time()
-
-        return frame if ret else None
+        ret = None
+        if _is_frame:
+            if pil_image:
+                img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                ret = Image.fromarray(img)
+            else:
+                ret = frame
+        return ret
 
     def get_video_time(self, frame_count=None):
         if frame_count is None:

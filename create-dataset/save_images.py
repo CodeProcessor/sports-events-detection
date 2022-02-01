@@ -63,8 +63,10 @@ class Clips:
                 if c == 115:
                     save_image()
             elif self._extract_type == ExtractTypes.auto:
-                if frame_position % 25 == 0:
+                if frame_position % 15 == 0:
                     save_image()
+            else:
+                raise Exception("Invalid extract type")
             frame_position += 1
             ret, frame = video_clip.read()
 
@@ -93,8 +95,8 @@ class Clips:
 
 
 if __name__ == '__main__':
-    path_to_clips = "../clip-extract-tool/data/clips_2c_7m"
-    destination = "extracted_images4"
+    path_to_clips = "../clip-extract-tool/data/clips_digital"
+    destination = "extracted_images_digital_v2"
     _type = ExtractTypes.auto
     clip_obj = Clips(path_to_clips, _type, dest=destination)
     clip_obj.extract()
