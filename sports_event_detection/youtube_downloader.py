@@ -19,6 +19,11 @@ class YouTubeDownloader:
         print("Title of video:   ", self.yt.title)
         print("Number of views:  ", self.yt.views)
         print("Length of video:  ", self.yt.length, "seconds")
+        return {
+            "title": self.yt.title,
+            "views": self.yt.views,
+            "length": self.yt.length
+        }
 
     def download(self, path, filename=None, resolution="360p"):
         stream = list(self.yt.streams.filter(progressive=True))
@@ -37,6 +42,14 @@ class YouTubeDownloader:
 
 
 if __name__ == '__main__':
-    yt = YouTubeDownloader("https://www.youtube.com/watch?v=nnpW8O5YLkM")
-    yt.get_info()
-    yt.download("video_downloads")
+    links = [
+        "https://www.youtube.com/watch?v=OsMiN6QdiNw",
+        "https://www.youtube.com/watch?v=HGPhsSsZE7E",
+        "https://www.youtube.com/watch?v=hwn3NpEwBfk",
+        "https://www.youtube.com/watch?v=WnrOpvy0U_w"
+    ]
+    for link in links:
+        print("Downloading video: ", link)
+        yt = YouTubeDownloader(link)
+        yt.get_info()
+        yt.download("video_downloads")
