@@ -7,6 +7,7 @@
 import logging
 import os
 
+import cv2
 from PIL import Image
 
 from draw import put_text
@@ -14,7 +15,6 @@ from sports_event_detection.classify import Classify
 from sports_event_detection.common import ModelNames
 from sports_event_detection.storage import Storage
 from sports_event_detection.video_reader import VideoReader
-from sports_event_detection.video_writer import SEDVideoWriter
 
 logging.basicConfig(level=logging.INFO)
 
@@ -25,7 +25,7 @@ class PlayDetection:
         self.model_path = model_name
         self.storage = Storage(db_name)
         self.video = VideoReader(video_path, verbose=True)
-        self.video_writer = SEDVideoWriter("output_play_noplay.mp4", 25, "output")
+        self.video_writer = None  # SEDVideoWriter("output_play_noplay.mp4", 25, "output")
         self.model_name = ModelNames.play_noplay_classification_model.name
 
     def load_model(self):
@@ -94,7 +94,12 @@ class PlayDetection:
                                  f"{data_json['data'][f'{self.model_name}']['class']} - {data_json['data'][f'{self.model_name}']['prob']}",
                                  (25, 25), color=(0, 0, 255))
 
-            self.video_writer.write(out_frame)
+            if self.video_writer is None:
+                cv2.imshow('frame', out_frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            else:
+                self.video_writer.write(out_frame)
             if frame_number % 100 == 0:
                 print("Frame: {} - {}".format(frame_number, self.video.get_video_time()))
             frame_number += 1
