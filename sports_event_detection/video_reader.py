@@ -3,6 +3,7 @@ Created on 6/6/21
 
 @author: dulanj
 '''
+import os
 import time
 
 import cv2
@@ -11,7 +12,6 @@ from PIL import Image
 
 class VideoReader():
     def __init__(self, filename: str, verbose: bool = False):
-
         self.__filename = filename
         self.__cap = None
 
@@ -26,6 +26,9 @@ class VideoReader():
         # self.__frame_queue = Queue(maxsize=5)
 
         # super().__init__()
+
+    def get_video_name(self):
+        return os.path.splitext(os.path.basename(self.__filename))[0]
 
     def init_capture(self):
         self.__cap = cv2.VideoCapture(self.__filename)
@@ -107,9 +110,12 @@ class VideoReader():
         if timestamp < self.__frame_count:
             self.init_capture()
 
-        while timestamp > self.__frame_count:
-            self.__grab_frame()
-        print(f"Seek done: {self.__frame_count}")
+        if timestamp > self.__frame_count:
+            while timestamp > self.__frame_count:
+                self.__grab_frame()
+            print(f"Seek done: {self.__frame_count}")
+        else:
+            print(f"Seek already done: {self.__frame_count}")
         return 0
 
     def seek_n_read(self, timestamp: int):

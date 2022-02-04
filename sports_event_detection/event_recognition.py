@@ -10,6 +10,7 @@ from collections import deque
 
 from tqdm import tqdm
 
+from sports_event_detection.video_writer import SEDVideoWriter
 from storage import Storage
 from video_reader import VideoReader
 
@@ -21,6 +22,8 @@ class SportsEventsRecognition:
         self.storage = Storage(db_name)
         self.classes = classes
         self.class_reverse = {v: k for k, v in self.classes.items()}
+        self.window_size = int(1 * self.video.get_fps())
+        self.event_name = None
         print("Video path: {}\n"
               "DB path: {}\n"
               "Total frames: {}".format(video_path, db_name, self.video.get_total_frame_count()))
@@ -28,7 +31,6 @@ class SportsEventsRecognition:
 
     def is_correct_event(self, event, event_name):
         ret = False
-
         if event_name in ["scrum", "lineout"]:
             _is_same_event = int(event[-1]) == self.class_reverse[event_name]
             if _is_same_event:
@@ -79,10 +81,9 @@ class SportsEventsRecognition:
         return "{:02d}:{:02d}:{:02d}".format(int(hours), int(minutes), int(seconds))
 
     def find_event(self, mod_eve_list):
-        _max_len = int(1 * self.video.get_fps())
-        queue = deque(maxlen=_max_len)
+        queue = deque(maxlen=self.window_size)
         event_frame_ids = []
-        _event_name = "_".join([event_name for _, event_name in mod_eve_list])
+        self.event_name = "_".join([event_name for _, event_name in mod_eve_list])
         for frame_id in tqdm(range(0, self.video.get_total_frame_count())):
             # time.sleep(1)
             data = self.storage.get_data(frame_id)
@@ -95,26 +96,54 @@ class SportsEventsRecognition:
             if ret > 0.8:
                 event_frame_ids.append(frame_id)
                 # print("{}-{:.2f}-{}".format(frame_id, ret, self.frame_to_time(frame_id)))
-                [queue.append(None) for _ in range(_max_len)]
+                [queue.append(None) for _ in range(self.window_size)]
             if data is None:
                 print(len(queue))
                 break
+        self.event_summary(event_frame_ids)
 
+    def event_summary(self, event_frame_ids):
         event_gap = [None, None]
+        _no_of_events = 0
         for f_id in event_frame_ids:
             if event_gap[0] is None:
                 event_gap = [f_id, f_id]
-            if f_id - event_gap[1] < _max_len:
+            if f_id - event_gap[1] < self.window_size:
                 event_gap[1] = f_id
             else:
-                if event_gap[1] - event_gap[0] > _max_len:
+                if event_gap[1] - event_gap[0] > self.window_size * 3:
+                    _no_of_events += 1
                     print("Event {} : {}-{} Duration {}".format(
-                        _event_name,
+                        self.event_name,
                         self.frame_to_time(event_gap[0]),
-                        self.frame_to_time(event_gap[1])
-                        , self.frame_to_time(event_gap[1] - event_gap[0])
+                        self.frame_to_time(event_gap[1]),
+                        self.frame_to_time(event_gap[1] - event_gap[0])
                     ))
+                    self.clip_event(
+                        f"{self.event_name}",
+                        f"{self.event_name}_{_no_of_events}.mp4",
+                        event_gap[0],
+                        event_gap[1]
+                    )
+
                 event_gap = [None, None]
+        print("Total {} Events: {}".format(self.event_name, _no_of_events))
+
+    def clip_event(self, dir_name, clip_name, from_frame_id, to_frame_id):
+        video_dir_path = os.path.join("event_clips", self.video.get_video_name(), dir_name)
+        video_writer = SEDVideoWriter(clip_name, self.video.get_fps(), video_dir_path)
+        self.video.seek(from_frame_id)
+        for _ in range(from_frame_id, to_frame_id):
+            frame = self.video.read_frame()
+            if frame is not None:
+                video_writer.write(frame)
+        video_writer.clean()
+        print("Clip {} created from {} to {} and saved to {}".format(
+            clip_name,
+            self.frame_to_time(from_frame_id),
+            self.frame_to_time(to_frame_id),
+            os.path.join(video_dir_path, clip_name))
+        )
 
 
 if __name__ == '__main__':
