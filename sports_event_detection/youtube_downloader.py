@@ -15,7 +15,8 @@ class YouTubeDownloader:
         self.yt = YouTube(url)
 
     def get_video_title(self):
-        return self.yt.title.replace(" ", "_").replace("/", "_").replace("(", "_").replace(")", "_") + ".mp4"
+        return self.yt.title.replace(" ", "_").replace("/", "_").replace("(", "_").replace(")", "_").replace("&",
+                                                                                                             "_") + ".mp4"
 
     def get_info(self):
         print("Title of video:   ", self.yt.title)
@@ -33,9 +34,9 @@ class YouTubeDownloader:
         for _st in stream:
             res = _st.resolution
             if res == resolution:
-                print(f"Downloading video: {_st}")
                 _filename = self.get_video_title() if filename is None else filename
                 _full_path = os.path.join(path, _filename)
+                print(f"Downloading video to: {_full_path} \n from {_st}")
                 if os.path.isfile(_full_path) and not overwrite:
                     print(f"File already exists [{_filename}] in {path}")
                     return _full_path

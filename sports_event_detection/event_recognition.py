@@ -10,13 +10,13 @@ from collections import deque
 
 from tqdm import tqdm
 
+from sports_event_detection.storage import Storage
+from sports_event_detection.video_reader import VideoReader
 from sports_event_detection.video_writer import SEDVideoWriter
-from storage import Storage
-from video_reader import VideoReader
 
 
 class SportsEventsRecognition:
-    def __init__(self, video_path, db_name, classes):
+    def __init__(self, video_path, db_name, classes, save_clip=False):
         self.model = None
         self.video = VideoReader(video_path)
         self.storage = Storage(db_name)
@@ -27,6 +27,7 @@ class SportsEventsRecognition:
         print("Video path: {}\n"
               "DB path: {}\n"
               "Total frames: {}".format(video_path, db_name, self.video.get_total_frame_count()))
+        self.save_clip = save_clip
         time.sleep(2)
 
     def is_correct_event(self, event, event_name):
@@ -93,7 +94,7 @@ class SportsEventsRecognition:
 
             ret = max(
                 [self.get_moving_average(queue, model_name, event_name) for model_name, event_name in mod_eve_list])
-            if ret > 0.8:
+            if ret >= 0.6:
                 event_frame_ids.append(frame_id)
                 # print("{}-{:.2f}-{}".format(frame_id, ret, self.frame_to_time(frame_id)))
                 [queue.append(None) for _ in range(self.window_size)]
@@ -124,7 +125,7 @@ class SportsEventsRecognition:
                         f"{self.event_name}_{_no_of_events}.mp4",
                         event_gap[0],
                         event_gap[1]
-                    )
+                    ) if self.save_clip else ""
 
                 event_gap = [None, None]
         print("Total {} Events: {}".format(self.event_name, _no_of_events))

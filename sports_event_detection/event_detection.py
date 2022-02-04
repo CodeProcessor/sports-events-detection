@@ -5,10 +5,10 @@
 @Time:        12/01/2022 00:17
 """
 import logging
-import time
 
 import cv2
 
+from sports_event_detection.params import database_update_frequency
 from sports_event_detection.storage import Storage
 from sports_event_detection.video_reader import VideoReader
 from sports_event_detection.yolo_model import YoloModel
@@ -17,7 +17,7 @@ from sports_event_detection.yolo_model import YoloModel
 class SportsEventsDetection:
     def __init__(self, video_path, db_name, weights_path, classes, model_name):
         self.model = None
-        self.video = VideoReader(video_path)
+        self.video = VideoReader(video_path, verbose=True)
         self.storage = Storage(db_name)
         self.weights_path = weights_path
         self.classes = classes
@@ -80,25 +80,24 @@ class SportsEventsDetection:
 
                 if break_on_frame is not None and break_on_frame < frame_count:
                     break
-                if frame_count % viz_count == 0:
-                    _fps = "{:.2f}".format(viz_count / (time.time() - start_time)) if start_time is not None else 'N/A'
-                    print('Processing frame {} @ {} fps'.format(frame_count, _fps))
-                    start_time = time.time()
+                # if frame_count % viz_count == 0:
+                #     _fps = "{:.2f}".format(viz_count / (time.time() - start_time)) if start_time is not None else 'N/A'
+                #     print('Processing frame {}/{} @ {} fps'.format(frame_count, self.video.get_total_frame_count(), _fps))
+                #     start_time = time.time()
 
                 is_store, data_json = self.get_data(frame_count, frame)
                 if is_store:
                     bulk_data.append(data_json)
                     bulk_delete_ids.append(frame_count)
 
-                if len(bulk_data) > 100:
+                if len(bulk_data) > database_update_frequency:
                     self.storage.delete_bulk_data(bulk_delete_ids)
                     self.storage.insert_bulk_data(bulk_data)
                     bulk_data = []
                     bulk_delete_ids = []
 
-                frame = self.draw_info(frame, data_json)
-
-                cv2.imshow('frame', frame)
+                # frame = self.draw_info(frame, data_json)
+                # cv2.imshow('frame', frame)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
                 frame_count += 1

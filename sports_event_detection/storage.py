@@ -13,6 +13,9 @@ import sqlite3 as sl
 class Storage:
     def __init__(self, db_name):
         init = not os.path.exists(db_name)
+        _db_dir = os.path.dirname(db_name)
+        if not os.path.exists(_db_dir):
+            os.makedirs(_db_dir)
         self.con = sl.connect(db_name)
         self.cur = self.con.cursor()
         if init:

@@ -8,12 +8,15 @@ import time
 
 import cv2
 from PIL import Image
+from tqdm import tqdm
 
 
 class VideoReader():
     def __init__(self, filename: str, verbose: bool = False):
         self.__filename = filename
         self.__cap = None
+        self.pbar = None
+        self.verbose = verbose
 
         self.__fps = 0
         self.__total_frame_count = 0
@@ -21,7 +24,6 @@ class VideoReader():
         self.init_capture()
         self.__processing_fps = 0
         self.__frame_count = 0
-        self.verbose = verbose
         self.read_fps_timestamp = 1
         # self.__frame_queue = Queue(maxsize=5)
 
@@ -41,6 +43,8 @@ class VideoReader():
             height = self.__cap.get(4)  # float `height`
             self.__frame_shape = (int(height), int(width))
             print("Video properties: ", self.__frame_shape, self.__fps)
+            if self.verbose:
+                self.pbar = tqdm(total=self.__total_frame_count, desc="Video Reader")
         else:
             raise Exception("Video didnt open: {}".format(self.__filename))
 
@@ -83,10 +87,15 @@ class VideoReader():
         _is_frame, frame = self.__cap.read()
         self.__frame_count += 1
         if self.verbose:
+            self.pbar.update(1)
             interval = 100
             if self.__frame_count % interval == 0:
-                print("Read FPS: ", interval / (time.time() - self.read_fps_timestamp))
+                _fps = interval / (time.time() - self.read_fps_timestamp)
+                # print("Video Reader - Frame No: {}/{} Read FPS: {}".format(
+                #     self.__frame_count, self.__total_frame_count, _fps)
+                # )
                 self.read_fps_timestamp = time.time()
+                self.pbar.set_description(f"Processing at {_fps:.0f} FPS [{_fps / self.__fps:.0f}X]")
         ret = None
         if _is_frame:
             if pil_image:
@@ -135,6 +144,7 @@ class VideoReader():
 
     def cleanup(self):
         self.__cap.release()
+        self.pbar.close()
         cv2.destroyAllWindows()
 
 

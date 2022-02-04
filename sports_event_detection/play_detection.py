@@ -7,12 +7,12 @@
 import logging
 import os
 
-import cv2
 from PIL import Image
 
-from draw import put_text
 from sports_event_detection.classify import Classify
 from sports_event_detection.common import ModelNames
+from sports_event_detection.draw import put_text
+from sports_event_detection.params import database_update_frequency
 from sports_event_detection.storage import Storage
 from sports_event_detection.video_reader import VideoReader
 
@@ -44,7 +44,7 @@ class PlayDetection:
                 'prob': _pred.get_prob()
             }
             if data_json is None:
-                logging.info('No data found for frame {}, predicting'.format(frame_count))
+                logging.debug('No data found for frame {}, predicting'.format(frame_count))
                 data_json = {
                     'frame_id': frame_count,
                     'data': {
@@ -52,7 +52,7 @@ class PlayDetection:
                     }
                 }
             else:
-                logging.info('Data found for frame {}, but not specific model predicting'.format(frame_count))
+                logging.debug('Data found for frame {}, but not specific model predicting'.format(frame_count))
                 data_json['data'][f"{self.model_name}"] = _pred_json
         else:
             logging.debug('Data found for frame {}, skipping'.format(frame_count))
@@ -86,24 +86,24 @@ class PlayDetection:
                     bulk_data.append(data_json)
                     bulk_delete_ids.append(frame_number)
 
-                if len(bulk_data) > 100:
+                if len(bulk_data) > database_update_frequency:
                     self.storage.delete_bulk_data(bulk_delete_ids)
                     self.storage.insert_bulk_data(bulk_data)
                     bulk_data = []
                     bulk_delete_ids = []
 
-                out_frame = put_text(frame,
-                                     f"{data_json['data'][f'{self.model_name}']['class']} - {data_json['data'][f'{self.model_name}']['prob']}",
-                                     (25, 25), color=(0, 0, 255))
-
-                if self.video_writer is None:
-                    cv2.imshow('frame', out_frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
-                else:
+                if self.video_writer is not None:
+                    out_frame = put_text(frame,
+                                         f"{data_json['data'][f'{self.model_name}']['class']} - "
+                                         f"{data_json['data'][f'{self.model_name}']['prob']}",
+                                         (25, 25), color=(0, 0, 255))
+                    #     cv2.imshow('frame', out_frame)
+                    #     if cv2.waitKey(1) & 0xFF == ord('q'):
+                    #         break
+                    # else:
                     self.video_writer.write(out_frame)
-                if frame_number % 100 == 0:
-                    print("Frame: {} - {}".format(frame_number, self.video.get_video_time()))
+                # if frame_number % 100 == 0:
+                #     print("Frame: {} - {}".format(frame_number, self.video.get_video_time()))
                 frame_number += 1
                 frame = self.video.read_frame()
         except KeyError as ke:
