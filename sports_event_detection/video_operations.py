@@ -53,7 +53,7 @@ class VideoOperations:
         print("Frame size:", video_cv.get_shape())
         self.video_info = video_cv
 
-    def split_video(self, start_second, end_second):
+    def split_video(self, start_second: str, end_second: str):
         command = "ffmpeg -i " + self.video_in + " -ss " + start_second + " -to " + end_second + \
                   " -c:v libx264 -crf 30 " + self.video_out
 
@@ -83,6 +83,9 @@ class VideoOperations:
         return 0
 
     def save(self, output_path):
+        _out_dirname = os.path.dirname(output_path)
+        if not os.path.exists(_out_dirname):
+            os.makedirs(_out_dirname)
         os.rename(self.video_in, output_path)
         logging.info("Video Save Successfully to %s", output_path)
         return 0

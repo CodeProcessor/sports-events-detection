@@ -4,6 +4,8 @@
 @Author:      dulanj
 @Time:        31/01/2022 23:37
 """
+import os
+
 from pytube import YouTube
 
 
@@ -13,7 +15,7 @@ class YouTubeDownloader:
         self.yt = YouTube(url)
 
     def get_video_title(self):
-        return self.yt.title.replace(" ", "_").replace("/", "_") + ".mp4"
+        return self.yt.title.replace(" ", "_").replace("/", "_").replace("(", "_").replace(")", "_") + ".mp4"
 
     def get_info(self):
         print("Title of video:   ", self.yt.title)
@@ -25,20 +27,24 @@ class YouTubeDownloader:
             "length": self.yt.length
         }
 
-    def download(self, path, filename=None, resolution="360p"):
+    def download_video(self, path, filename=None, resolution="360p", overwrite=False):
         stream = list(self.yt.streams.filter(progressive=True))
+        _full_path = None
         for _st in stream:
             res = _st.resolution
             if res == resolution:
                 print(f"Downloading video: {_st}")
-                if filename is None:
-                    _st.download(path)
-                else:
-                    _st.download(path, filename)
-                print("Download complete!")
+                _filename = self.get_video_title() if filename is None else filename
+                _full_path = os.path.join(path, _filename)
+                if os.path.isfile(_full_path) and not overwrite:
+                    print(f"File already exists [{_filename}] in {path}")
+                    return _full_path
+                _st.download(path, _filename)
+                print("Download complete! - {}".format(_filename))
                 break
             else:
                 print("Resolution not supported - ", res)
+        return _full_path
 
 
 if __name__ == '__main__':
@@ -52,4 +58,4 @@ if __name__ == '__main__':
         print("Downloading video: ", link)
         yt = YouTubeDownloader(link)
         yt.get_info()
-        yt.download("video_downloads")
+        yt.download_video("video_downloads")
