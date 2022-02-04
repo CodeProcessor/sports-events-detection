@@ -14,10 +14,11 @@ def scrum_lineout_recognition(video_path):
     db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
     classes = {
         0: 'scrum',
-        1: 'line_out'
+        1: 'lineout'
     }
     ef = SportsEventsRecognition(video_path, db_name, classes)
-    ef.find_event('scrum')
+    ef.find_event([(ModelNames.scrum_lineout_object_detection_model.name, 'scrum')])
+    ef.find_event([(ModelNames.scrum_lineout_object_detection_model.name, 'lineout')])
 
 
 def play_recognition(video_path):
@@ -25,12 +26,16 @@ def play_recognition(video_path):
     classes = {
         0: 'digital'
     }
-    model_name = ModelNames.digital_object_detection_model.name
-    ef = SportsEventsRecognition(video_path, db_name, classes, model_name, logic="banner")
-    ef.find_event('digital')
+    ef = SportsEventsRecognition(video_path, db_name, classes)
+    mod_eve_list = [
+        (ModelNames.digital_object_detection_model.name, 'digital'),
+        (ModelNames.play_noplay_classification_model.name, 'noplay')
+    ]
+    ef.find_event(mod_eve_list)
 
 
 if __name__ == '__main__':
     video_path = '/home/dulanj/MSc/DialogRugby/Match#1_Navy_SC_vs_Havelock_SC_DRL_2019_20.mp4'
-    # scrum_lineout_recognition(video_path)
+    video_path = "/home/dulanj/MSc/DialogRugby/10fps/match2.mp4"
+    scrum_lineout_recognition(video_path)
     play_recognition(video_path)
