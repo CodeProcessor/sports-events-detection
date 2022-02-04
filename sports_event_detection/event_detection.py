@@ -38,7 +38,7 @@ class SportsEventsDetection:
             if self.model is None:
                 self.model = self.load_model()
             if data_json is None:
-                logging.info('No data found for frame {}, predicting'.format(frame_count))
+                logging.debug('No data found for frame {}, predicting'.format(frame_count))
                 data_json = {
                     'frame_id': frame_count,
                     'data': {
@@ -46,7 +46,7 @@ class SportsEventsDetection:
                     }
                 }
             else:
-                logging.info('Data found for frame {}, but not specific model predicting'.format(frame_count))
+                logging.debug('Data found for frame {}, but not specific model predicting'.format(frame_count))
                 data_json['data'][f"{self.model_name}"] = self.model.predict(frame).tolist()
         else:
             logging.debug('Data found for frame {}, skipping'.format(frame_count))
@@ -66,7 +66,7 @@ class SportsEventsDetection:
                     (0, 255, 0), 2)
         return frame
 
-    def video_loop(self, skip_frames=0):
+    def video_loop(self, skip_frames=0, break_on_frame=None):
         frame_count = skip_frames
         self.video.seek(skip_frames)
         frame = self.video.read_frame()
@@ -75,31 +75,37 @@ class SportsEventsDetection:
         viz_count = 100
         start_time = None
 
-        while frame is not None:
-            frame_count += 1
-            if frame_count % viz_count == 0:
-                _fps = "{:.2f}".format(viz_count / (time.time() - start_time)) if start_time is not None else 'N/A'
-                print('Processing frame {} @ {} fps'.format(frame_count, _fps))
-                start_time = time.time()
+        try:
+            while frame is not None:
 
-            is_store, data_json = self.get_data(frame_count, frame)
-            if is_store:
-                bulk_data.append(data_json)
-                bulk_delete_ids.append(frame_count)
+                if break_on_frame is not None and break_on_frame < frame_count:
+                    break
+                if frame_count % viz_count == 0:
+                    _fps = "{:.2f}".format(viz_count / (time.time() - start_time)) if start_time is not None else 'N/A'
+                    print('Processing frame {} @ {} fps'.format(frame_count, _fps))
+                    start_time = time.time()
 
-            if len(bulk_data) > 100:
-                self.storage.delete_bulk_data(bulk_delete_ids)
-                self.storage.insert_bulk_data(bulk_data)
-                bulk_data = []
-                bulk_delete_ids = []
+                is_store, data_json = self.get_data(frame_count, frame)
+                if is_store:
+                    bulk_data.append(data_json)
+                    bulk_delete_ids.append(frame_count)
 
-            frame = self.draw_info(frame, data_json)
+                if len(bulk_data) > 100:
+                    self.storage.delete_bulk_data(bulk_delete_ids)
+                    self.storage.insert_bulk_data(bulk_data)
+                    bulk_data = []
+                    bulk_delete_ids = []
 
-            cv2.imshow('frame', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-            frame = self.video.read_frame()
+                frame = self.draw_info(frame, data_json)
 
+                cv2.imshow('frame', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+                frame_count += 1
+                frame = self.video.read_frame()
+        except KeyError as ke:
+            print(ke)
+        self.storage.delete_bulk_data(bulk_delete_ids)
         self.storage.insert_bulk_data(bulk_data)
 
         self.video.cleanup()

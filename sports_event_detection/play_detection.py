@@ -20,9 +20,9 @@ logging.basicConfig(level=logging.INFO)
 
 
 class PlayDetection:
-    def __init__(self, video_path, db_name, model_name):
+    def __init__(self, video_path, db_name, model_path):
         self.model = None
-        self.model_path = model_name
+        self.model_path = model_path
         self.storage = Storage(db_name)
         self.video = VideoReader(video_path, verbose=True)
         self.video_writer = None  # SEDVideoWriter("output_play_noplay.mp4", 25, "output")
@@ -59,10 +59,10 @@ class PlayDetection:
 
         return is_model_inference, data_json
 
-    def video_loop(self):
-
+    def video_loop(self, skip_frames=0, break_on_frame=None):
+        frame_number = skip_frames
+        self.video.seek(skip_frames)
         frame = self.video.read_frame()
-        frame_number = 1
         data_json = {
             'frame_id': 1,
             'data':
@@ -75,9 +75,11 @@ class PlayDetection:
         }
         bulk_data = []
         bulk_delete_ids = []
-        while frame is not None:
-            if frame_number % 25 == 1:
-                # convert to PIL image
+        try:
+            while frame is not None:
+                if break_on_frame is not None and break_on_frame < frame_number:
+                    break
+
                 pil_image = Image.fromarray(frame)
                 is_store, data_json = self.get_data(frame_number, pil_image)
                 if is_store:
@@ -90,22 +92,24 @@ class PlayDetection:
                     bulk_data = []
                     bulk_delete_ids = []
 
-            out_frame = put_text(frame,
-                                 f"{data_json['data'][f'{self.model_name}']['class']} - {data_json['data'][f'{self.model_name}']['prob']}",
-                                 (25, 25), color=(0, 0, 255))
+                out_frame = put_text(frame,
+                                     f"{data_json['data'][f'{self.model_name}']['class']} - {data_json['data'][f'{self.model_name}']['prob']}",
+                                     (25, 25), color=(0, 0, 255))
 
-            if self.video_writer is None:
-                cv2.imshow('frame', out_frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-            else:
-                self.video_writer.write(out_frame)
-            if frame_number % 100 == 0:
-                print("Frame: {} - {}".format(frame_number, self.video.get_video_time()))
-            frame_number += 1
-            # frame_number += 25
-            # video.seek(frame_number)
-            frame = self.video.read_frame()
+                if self.video_writer is None:
+                    cv2.imshow('frame', out_frame)
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
+                        break
+                else:
+                    self.video_writer.write(out_frame)
+                if frame_number % 100 == 0:
+                    print("Frame: {} - {}".format(frame_number, self.video.get_video_time()))
+                frame_number += 1
+                frame = self.video.read_frame()
+        except KeyError as ke:
+            print(ke)
+        self.storage.delete_bulk_data(bulk_delete_ids)
+        self.storage.insert_bulk_data(bulk_data)
 
 
 if __name__ == '__main__':

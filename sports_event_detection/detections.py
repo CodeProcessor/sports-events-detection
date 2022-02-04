@@ -19,7 +19,7 @@ def get_digital(video_path):
     }
     model_name = ModelNames.digital_object_detection_model.name
     sed = SportsEventsDetection(video_path, db_name, weight_path, classes, model_name)
-    sed.video_loop(skip_frames=0)
+    sed.video_loop(skip_frames=0, break_on_frame=100)
 
 
 def get_scrum_linout(video_path):
@@ -31,19 +31,27 @@ def get_scrum_linout(video_path):
     }
     model_name = ModelNames.scrum_lineout_object_detection_model.name
     sed = SportsEventsDetection(video_path, db_name, weight_path, classes, model_name)
-    sed.video_loop(skip_frames=0)
+    sed.video_loop(skip_frames=41000, break_on_frame=None)
 
 
 def play_detection(video_path):
-    model_name = "/home/dulanj/MSc/sports-events-detection/data/trained_models/play_noplay/best-model-parameters3.pt"
+    model_path = "/home/dulanj/MSc/sports-events-detection/data/trained_models/play_noplay/best-model-parameters3.pt"
     db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
-    pd_obj = PlayDetection(video_path, db_name, model_name)
-    pd_obj.video_loop()
+    pd_obj = PlayDetection(video_path, db_name, model_path)
+    pd_obj.video_loop(skip_frames=0, break_on_frame=100)
 
 
 if __name__ == '__main__':
     # video_path = "/home/dulanj/MSc/DialogRugby/Match#16_CR_&_FC_v_Army_SC_DRL_2019_20.mp4"
     video_path = "/home/dulanj/MSc/DialogRugby/Match#1_Navy_SC_vs_Havelock_SC_DRL_2019_20.mp4"
-    get_digital(video_path)
-    get_scrum_linout(video_path)
-    play_detection(video_path)
+
+    video_list = [
+        # video_path,
+        "/home/dulanj/MSc/DialogRugby/10fps/match2.mp4",
+        "/home/dulanj/MSc/DialogRugby/10fps/match3.mp4"
+    ]
+    for video_path in video_list:
+        print(video_path)
+        # get_digital(video_path)
+        get_scrum_linout(video_path)
+        # play_detection(video_path)
