@@ -59,7 +59,9 @@ class PlayDetection:
 
         return is_model_inference, data_json
 
-    def video_loop(self, skip_frames=0, break_on_frame=None):
+    def video_loop(self, skip_time="00:00:00", break_on_time=None):
+        skip_frames = self.video.get_frame_no(skip_time)
+        break_on_frame = None if break_on_time is None else self.video.get_frame_no(break_on_time)
         frame_number = skip_frames
         self.video.seek(skip_frames)
         frame = self.video.read_frame()
