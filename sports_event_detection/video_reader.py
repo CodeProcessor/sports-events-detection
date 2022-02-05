@@ -3,7 +3,9 @@ Created on 6/6/21
 
 @author: dulanj
 '''
+import logging
 import os
+import sys
 import time
 
 import cv2
@@ -29,6 +31,11 @@ class VideoReader():
 
         # super().__init__()
 
+    def get_video_info(self):
+        print("FPS:", self.get_fps())
+        print("Frame count:", self.get_total_frame_count())
+        print("Frame size:", self.get_shape())
+
     def get_video_name(self):
         return os.path.splitext(os.path.basename(self.__filename))[0]
 
@@ -45,6 +52,7 @@ class VideoReader():
             print("Video properties: ", self.__frame_shape, self.__fps)
             if self.verbose:
                 self.pbar = tqdm(total=self.__total_frame_count, desc="Video Reader")
+                self.get_video_info()
         else:
             raise Exception("Video didnt open: {}".format(self.__filename))
 
@@ -115,6 +123,20 @@ class VideoReader():
         minutes = minutes % 60
         return "{:02d}:{:02d}:{:02d}".format(int(hours), int(minutes), int(seconds))
 
+    def get_frame_no(self, video_time_str=None):
+        if video_time_str is None:
+            frame_no = self.__frame_count
+        else:
+            try:
+                _hh, _mm, _ss = video_time_str.split(":")
+                seconds = int(_hh) * 3600 + int(_mm) * 60 + int(_ss)
+                frame_no = seconds * self.get_fps()
+            except Exception as e:
+                print(e)
+                logging.error("Video time string is incorrect: {}".format(video_time_str))
+                sys.exit(1)
+        return frame_no
+
     def seek(self, timestamp: int):
         if timestamp < self.__frame_count:
             self.init_capture()
@@ -144,7 +166,8 @@ class VideoReader():
 
     def cleanup(self):
         self.__cap.release()
-        self.pbar.close()
+        if self.pbar is not None:
+            self.pbar.close()
         cv2.destroyAllWindows()
 
 
