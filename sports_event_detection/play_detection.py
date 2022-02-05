@@ -61,7 +61,10 @@ class PlayDetection:
 
     def video_loop(self, skip_time="00:00:00", break_on_time=None):
         skip_frames = self.video.get_frame_no(skip_time)
-        break_on_frame = None if break_on_time is None else self.video.get_frame_no(break_on_time)
+        break_on_frame = self.video.get_total_frame_count() if break_on_time is None else self.video.get_frame_no(
+            break_on_time)
+        duration = break_on_frame - skip_frames
+        self.video.set_progress_bar_limit(duration)
         frame_number = skip_frames
         self.video.seek(skip_frames)
         frame = self.video.read_frame()
@@ -79,7 +82,7 @@ class PlayDetection:
         bulk_delete_ids = []
         try:
             while frame is not None:
-                if break_on_frame is not None and break_on_frame < frame_number:
+                if break_on_frame < frame_number:
                     break
 
                 pil_image = Image.fromarray(frame)

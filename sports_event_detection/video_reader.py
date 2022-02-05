@@ -50,11 +50,17 @@ class VideoReader():
             height = self.__cap.get(4)  # float `height`
             self.__frame_shape = (int(height), int(width))
             print("Video properties: ", self.__frame_shape, self.__fps)
-            if self.verbose:
-                self.pbar = tqdm(total=self.__total_frame_count, desc="Video Reader")
-                self.get_video_info()
         else:
             raise Exception("Video didnt open: {}".format(self.__filename))
+
+    def set_progress_bar_limit(self, frame_count: int):
+        if self.verbose:
+            if self.pbar is not None:
+                self.pbar.close()
+            logging.info("Set progress bar limit: {}".format(frame_count))
+            self.pbar = tqdm(total=frame_count, desc="Video Reader")
+        else:
+            logging.info("Nothing to do set, verbose is False")
 
     def get_fps(self) -> int:
         return int(self.__fps)
@@ -95,6 +101,8 @@ class VideoReader():
         _is_frame, frame = self.__cap.read()
         self.__frame_count += 1
         if self.verbose:
+            if self.pbar is None:
+                self.pbar = tqdm(total=self.__total_frame_count, desc="Video Reader")
             self.pbar.update(1)
             interval = 100
             if self.__frame_count % interval == 0:

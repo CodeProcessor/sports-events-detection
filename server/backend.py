@@ -5,6 +5,7 @@
 @Time:        04/02/2022 13:53
 """
 import hashlib
+import json
 import os
 import sys
 from datetime import datetime
@@ -174,6 +175,6 @@ if __name__ == '__main__':
         ret = backend.process(_video_url, skip_time="00:00:00", break_on_time="00:10:00")
         print("Processed video: {}".format(_video_url))
         print("Time now: {}".format(datetime.now()))
-        print(ret)
+        print(json.dumps(ret, indent=4, sort_keys=True))
 
     # backend.process("https://www.youtube.com/watch?v=HGPhsSsZE7E")

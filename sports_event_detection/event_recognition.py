@@ -83,39 +83,39 @@ class SportsEventsRecognition:
 
     def find_event(self, mod_eve_list, skip_time="00:00:00", break_on_time=None):
         queue = deque(maxlen=self.window_size)
-        event_frame_ids = []
         self.event_name = "_".join([event_name for _, event_name in mod_eve_list])
         start_frame = self.video.get_frame_no(skip_time)
         end_frame = self.video.get_total_frame_count() if break_on_time is None else \
             self.video.get_frame_no(break_on_time)
+        duration = end_frame - start_frame
+        self.video.set_progress_bar_limit(duration)
+        event_frame_data = {
+            "event_frame_ids": [],
+            "start_time": skip_time,
+            "end_time": break_on_time,
+            "event_name": self.event_name,
+            "duration": duration
+        }
         for frame_id in tqdm(range(start_frame, end_frame)):
-            # time.sleep(1)
             data = self.storage.get_data(frame_id)
             queue.append(data)
-            # print(data)
-            # print(queue)
 
             ret = max(
                 [self.get_moving_average(queue, model_name, event_name) for model_name, event_name in mod_eve_list])
             if ret >= 0.6:
-                event_frame_ids.append(frame_id)
+                event_frame_data["event_frame_ids"].append(frame_id)
                 # print("{}-{:.2f}-{}".format(frame_id, ret, self.frame_to_time(frame_id)))
                 [queue.append(None) for _ in range(self.window_size)]
             if data is None:
                 print(len(queue))
                 break
-        return self.event_summary(event_frame_ids)
+        return self.event_summary(event_frame_data)
 
-    def event_summary(self, event_frame_ids):
-        _event_dictionary = {
-            "event_name": self.event_name,
-            "events": [],
-            "total_event_frames": len(event_frame_ids),
-            "total_events": 0
-        }
+    def event_summary(self, event_frame_data):
+        _events = []
         event_gap = [None, None]
         _no_of_events = 0
-        for f_id in event_frame_ids:
+        for f_id in event_frame_data["event_frame_ids"]:
             if event_gap[0] is None:
                 event_gap = [f_id, f_id]
             if f_id - event_gap[1] < self.window_size:
@@ -123,7 +123,7 @@ class SportsEventsRecognition:
             else:
                 if event_gap[1] - event_gap[0] > self.window_size * 3:
                     _no_of_events += 1
-                    _event_dictionary["events"].append(
+                    _events.append(
                         {
                             "event_name": self.event_name,
                             "start_frame_id": event_gap[0],
@@ -148,7 +148,15 @@ class SportsEventsRecognition:
 
                 event_gap = [None, None]
         print("Total {} Events: {}".format(self.event_name, _no_of_events))
-        _event_dictionary["total_events"] = _no_of_events
+        _event_dictionary = {
+            "event_name": self.event_name,
+            "events": _events,
+            "start_time": event_frame_data["start_time"],
+            "end_time": event_frame_data["end_time"],
+            "duration": event_frame_data["duration"],
+            "total_event_frames": len(event_frame_data["event_frame_ids"]),
+            "total_events": _no_of_events
+        }
         return _event_dictionary
 
     def clip_event(self, dir_name, clip_name, from_frame_id, to_frame_id):
