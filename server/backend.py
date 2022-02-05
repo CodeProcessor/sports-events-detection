@@ -127,7 +127,7 @@ class SportEventDetectionBackend:
         _event_list_2 = self.play_recognition(video_path, skip_time, break_on_time)
         return _event_list_1 + _event_list_2
 
-    def process(self, video_url, skip_time, break_on_time):
+    def process_video(self, video_url, skip_time, break_on_time):
         event_lists = []
         _converted_path = ""
         _full_path = self.download_video(video_url)
@@ -172,7 +172,7 @@ if __name__ == '__main__':
         # "https://www.youtube.com/watch?v=PeixkhanS_M"
     ]
     for _video_url in video_url_list:
-        ret = backend.process(_video_url, skip_time="00:00:00", break_on_time="00:10:00")
+        ret = backend.process_video(_video_url, skip_time="00:00:00", break_on_time="00:10:00")
         print("Processed video: {}".format(_video_url))
         print("Time now: {}".format(datetime.now()))
         print(json.dumps(ret, indent=4, sort_keys=True))

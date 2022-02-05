@@ -4,15 +4,20 @@
 @Author:      dulanj
 @Time:        02/02/2022 00:38
 """
+
+import sys
+
+sys.path.append('/home/dulanj/MSc/yolov5')
 import io
+from typing import Optional
 
 import cv2
 from fastapi import FastAPI
 from starlette.responses import StreamingResponse
 
 import sports_event_detection
-from sports_event_detection.utils import get_current_timestamp
-from sports_event_detection.youtube_downloader import YouTubeDownloader
+from backend import SportEventDetectionBackend
+from sports_event_detection.sports_utils import get_current_timestamp
 
 tags_metadata = [
     {
@@ -35,6 +40,8 @@ app = FastAPI(
     terms_of_service="https://github.com/CodeProcessor/sports-events-detection/blob/main/LICENSE",
     openapi_tags=tags_metadata
 )
+
+event_detection_backend = SportEventDetectionBackend()
 
 
 @app.get("/")
@@ -61,14 +68,11 @@ def show_status():
 @app.post("/process", tags=["process"])
 def download_pdf_and_call_engine(
         video_link: str,
-        start_time: str,
-        end_time: str
+        start_time: Optional[str] = "00:00:00",
+        end_time: Optional[str] = "99:99:99"
 ):
-    yt = YouTubeDownloader(video_link)
-    _vid_info = yt.get_info()
-    # yt.download("video_downloads")
+    if end_time == "99:99:99":
+        end_time = None
+    _result = event_detection_backend.process_video(video_link, start_time, end_time)
 
-    return {
-        "video_link": video_link,
-        "video_info": _vid_info
-    }
+    return _result
