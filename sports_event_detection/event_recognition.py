@@ -81,11 +81,14 @@ class SportsEventsRecognition:
         minutes = minutes % 60
         return "{:02d}:{:02d}:{:02d}".format(int(hours), int(minutes), int(seconds))
 
-    def find_event(self, mod_eve_list):
+    def find_event(self, mod_eve_list, skip_time="00:00:00", break_on_time=None):
         queue = deque(maxlen=self.window_size)
         event_frame_ids = []
         self.event_name = "_".join([event_name for _, event_name in mod_eve_list])
-        for frame_id in tqdm(range(0, self.video.get_total_frame_count())):
+        start_frame = self.video.get_frame_no(skip_time)
+        end_frame = self.video.get_total_frame_count() if break_on_time is None else \
+            self.video.get_frame_no(break_on_time)
+        for frame_id in tqdm(range(start_frame, end_frame)):
             # time.sleep(1)
             data = self.storage.get_data(frame_id)
             queue.append(data)
@@ -101,9 +104,15 @@ class SportsEventsRecognition:
             if data is None:
                 print(len(queue))
                 break
-        self.event_summary(event_frame_ids)
+        return self.event_summary(event_frame_ids)
 
     def event_summary(self, event_frame_ids):
+        _event_dictionary = {
+            "event_name": self.event_name,
+            "events": [],
+            "total_event_frames": len(event_frame_ids),
+            "total_events": 0
+        }
         event_gap = [None, None]
         _no_of_events = 0
         for f_id in event_frame_ids:
@@ -114,6 +123,16 @@ class SportsEventsRecognition:
             else:
                 if event_gap[1] - event_gap[0] > self.window_size * 3:
                     _no_of_events += 1
+                    _event_dictionary["events"].append(
+                        {
+                            "event_name": self.event_name,
+                            "start_frame_id": event_gap[0],
+                            "end_frame_id": event_gap[1],
+                            "start_time": self.frame_to_time(event_gap[0]),
+                            "end_time": self.frame_to_time(event_gap[1]),
+                            "duration": self.frame_to_time(event_gap[1] - event_gap[0])
+                        }
+                    )
                     print("Event {} : {}-{} Duration {}".format(
                         self.event_name,
                         self.frame_to_time(event_gap[0]),
@@ -129,6 +148,8 @@ class SportsEventsRecognition:
 
                 event_gap = [None, None]
         print("Total {} Events: {}".format(self.event_name, _no_of_events))
+        _event_dictionary["total_events"] = _no_of_events
+        return _event_dictionary
 
     def clip_event(self, dir_name, clip_name, from_frame_id, to_frame_id):
         video_dir_path = os.path.join("event_clips", self.video.get_video_name(), dir_name)

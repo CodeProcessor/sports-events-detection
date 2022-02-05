@@ -36,6 +36,6 @@ def play_recognition(video_path):
 
 if __name__ == '__main__':
     video_path = '/home/dulanj/MSc/DialogRugby/Match#1_Navy_SC_vs_Havelock_SC_DRL_2019_20.mp4'
-    video_path = "/home/dulanj/MSc/DialogRugby/10fps/match2.mp4"
+    video_path = "/home/dulanj/MSc/DialogRugby/10fps/match30.mp4"
     scrum_lineout_recognition(video_path)
     play_recognition(video_path)
