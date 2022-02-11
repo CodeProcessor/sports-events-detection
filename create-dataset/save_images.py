@@ -11,10 +11,22 @@ import sys
 
 import cv2
 
+from sports_event_detection.common import EventTypes
+
 
 class ExtractTypes(enum.Enum):
     manual = 0
     auto = 1
+
+
+clip_type_to_freq = {
+    EventTypes.lineout.name: 5,
+    EventTypes.scrum.name: 10,
+    EventTypes.kick.name: 2,
+    EventTypes.play.name: 15,
+    EventTypes.noplay.name: 15,
+    EventTypes.other.name: 15,
+}
 
 
 class Clips:
@@ -63,7 +75,7 @@ class Clips:
                 if c == 115:
                     save_image()
             elif self._extract_type == ExtractTypes.auto:
-                if frame_position % 15 == 0:
+                if frame_position % clip_type_to_freq[_clip_type] == 0:
                     save_image()
             else:
                 raise Exception("Invalid extract type")
@@ -95,8 +107,8 @@ class Clips:
 
 
 if __name__ == '__main__':
-    path_to_clips = "../clip-extract-tool/data/clips_digital"
-    destination = "extracted_images_digital_v2"
+    path_to_clips = "../clip-extract-tool/data/clips_2c_6m_v2"
+    destination = "extracted_images_scrum_lineout_v2"
     _type = ExtractTypes.auto
     clip_obj = Clips(path_to_clips, _type, dest=destination)
     clip_obj.extract()
