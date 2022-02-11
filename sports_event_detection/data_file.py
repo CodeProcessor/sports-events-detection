@@ -25,10 +25,10 @@ class RowData:
 
 
 class RowNames(enum.Enum):
-    start_time = 3
-    end_time = 4
-    activity = 2
-    team = 1
+    start_time = 1
+    end_time = 2
+    activity = 0
+    team = 10
 
 
 class DataFile:
@@ -71,14 +71,14 @@ class DataFile:
         _stop_time_in_seconds = self.__get_time_in_secs(_end_time_string)
         _duration = _stop_time_in_seconds - _start_time_in_seconds
         _duration = _duration if _duration > 0 else 1
-        _team = row_data[RowNames.team.value]
-        _activity = row_data[RowNames.activity.value]
+        _team = "NA"  # row_data[RowNames.team.value]
+        _activity = str(row_data[RowNames.activity.value]).lower()
         _activity_type = EventTypes.other
-        if "Kick" in _activity:
+        if "kick" in _activity:
             _activity_type = EventTypes.kick
-        elif "Line" in _activity:
+        elif "line" in _activity:
             _activity_type = EventTypes.lineout
-        elif "Scrum" in _activity:
+        elif "scrum" in _activity:
             _activity_type = EventTypes.scrum
         elif "noplay" in _activity:
             _activity_type = EventTypes.noplay
