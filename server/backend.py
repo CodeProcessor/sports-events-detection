@@ -25,6 +25,10 @@ class SportEventDetectionBackend:
     def __init__(self):
         self.save_clips = False
 
+    def get_yt_video_info(self, video_url):
+        yt_downloader = YouTubeDownloader(video_url)
+        return yt_downloader.get_info()
+
     def download_video(self, video_url, video_path="youtube_downloads"):
         yt_downloader = YouTubeDownloader(video_url)
         yt_downloader.get_info()
