@@ -5,7 +5,6 @@
 @Time:        04/02/2022 13:53
 """
 import hashlib
-import json
 import os
 import sys
 from datetime import datetime
@@ -22,8 +21,9 @@ from sports_event_detection.youtube_downloader import YouTubeDownloader
 
 
 class SportEventDetectionBackend:
-    def __init__(self):
-        self.save_clips = False
+    def __init__(self, return_json=True, save_clips=False):
+        self.return_json = return_json
+        self.save_clips = save_clips
 
     def get_yt_video_info(self, video_url):
         yt_downloader = YouTubeDownloader(video_url)
@@ -98,9 +98,11 @@ class SportEventDetectionBackend:
         _noplay_event_summary_dict = ef.find_event(
             mod_eve_list,
             skip_time,
-            break_on_time
+            break_on_time,
+            self.return_json
         )
-        return [_noplay_event_summary_dict]
+        return [_noplay_event_summary_dict] if isinstance(_noplay_event_summary_dict, dict) else \
+            _noplay_event_summary_dict
 
     def scrum_lineout_recognition(self, video_path, skip_time, break_on_time):
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
@@ -112,14 +114,17 @@ class SportEventDetectionBackend:
         _scrum_event_summary_dict = ef.find_event(
             [(ModelNames.scrum_lineout_object_detection_model.name, 'scrum')],
             skip_time,
-            break_on_time
+            break_on_time,
+            self.return_json
         )
         _line_out_event_summary_dict = ef.find_event(
             [(ModelNames.scrum_lineout_object_detection_model.name, 'lineout')],
             skip_time,
-            break_on_time
+            break_on_time,
+            self.return_json
         )
-        return [_scrum_event_summary_dict, _line_out_event_summary_dict]
+        return [_scrum_event_summary_dict, _line_out_event_summary_dict] if isinstance(_scrum_event_summary_dict, dict) \
+            else _scrum_event_summary_dict.append(_line_out_event_summary_dict)
 
     def detect_sport_events(self, video_path, skip_time, break_on_time):
         self.get_digital(video_path, skip_time, break_on_time)
@@ -129,7 +134,7 @@ class SportEventDetectionBackend:
     def recognize_sport_event(self, video_path, skip_time, break_on_time):
         _event_list_1 = self.scrum_lineout_recognition(video_path, skip_time, break_on_time)
         _event_list_2 = self.play_recognition(video_path, skip_time, break_on_time)
-        return _event_list_1 + _event_list_2
+        return _event_list_1 + _event_list_2 if isinstance(_event_list_1, list) else _event_list_1.append(_event_list_2)
 
     def process_video(self, video_url, skip_time, break_on_time):
         event_lists = []
@@ -145,11 +150,11 @@ class SportEventDetectionBackend:
             'video_download_path': _full_path,
             'converted_path': _converted_path,
             'event_lists': event_lists
-        }
+        } if isinstance(event_lists, dict) else event_lists
 
 
 if __name__ == '__main__':
-    backend = SportEventDetectionBackend()
+    backend = SportEventDetectionBackend(return_json=False)
     # video_url_list = [
     #     "https://www.youtube.com/watch?v=HGPhsSsZE7E",
     #     "https://www.youtube.com/watch?v=hwn3NpEwBfk",
@@ -179,6 +184,7 @@ if __name__ == '__main__':
         ret = backend.process_video(_video_url, skip_time="00:00:00", break_on_time="00:10:00")
         print("Processed video: {}".format(_video_url))
         print("Time now: {}".format(datetime.now()))
-        print(json.dumps(ret, indent=4, sort_keys=True))
+        print(ret.head())
+        # print(json.dumps(ret, indent=4, sort_keys=True))
 
     # backend.process("https://www.youtube.com/watch?v=HGPhsSsZE7E")

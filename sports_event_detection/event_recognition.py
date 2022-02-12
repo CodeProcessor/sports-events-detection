@@ -8,6 +8,7 @@ import os
 import time
 from collections import deque
 
+import pandas as pd
 from tqdm import tqdm
 
 from sports_event_detection.storage import Storage
@@ -81,7 +82,7 @@ class SportsEventsRecognition:
         minutes = minutes % 60
         return "{:02d}:{:02d}:{:02d}".format(int(hours), int(minutes), int(seconds))
 
-    def find_event(self, mod_eve_list, skip_time="00:00:00", break_on_time=None):
+    def find_event(self, mod_eve_list, skip_time="00:00:00", break_on_time=None, return_json=True):
         queue = deque(maxlen=self.window_size)
         self.event_name = "_".join([event_name for _, event_name in mod_eve_list])
         start_frame = self.video.get_frame_no(skip_time)
@@ -109,7 +110,7 @@ class SportsEventsRecognition:
             if data is None:
                 print(len(queue))
                 break
-        return self.event_summary(event_frame_data)
+        return self.event_summary(event_frame_data) if return_json else self.event_summary_df(event_frame_data)
 
     def event_summary(self, event_frame_data):
         _events = []
@@ -158,6 +159,46 @@ class SportsEventsRecognition:
             "total_events": _no_of_events
         }
         return _event_dictionary
+
+    def event_summary_df(self, event_frame_data):
+        _event_dataframe = pd.DataFrame()
+        _events = []
+        event_gap = [None, None]
+        _no_of_events = 0
+        for f_id in event_frame_data["event_frame_ids"]:
+            if event_gap[0] is None:
+                event_gap = [f_id, f_id]
+            if f_id - event_gap[1] < self.window_size:
+                event_gap[1] = f_id
+            else:
+                if event_gap[1] - event_gap[0] > self.window_size * 3:
+                    _no_of_events += 1
+                    _event_dataframe = _event_dataframe.append(
+                        {
+                            "event_name": self.event_name,
+                            "start_frame_id": int(event_gap[0]),
+                            "end_frame_id": int(event_gap[1]),
+                            "start_time": self.frame_to_time(event_gap[0]),
+                            "end_time": self.frame_to_time(event_gap[1]),
+                            "duration": self.frame_to_time(event_gap[1] - event_gap[0])
+                        }, ignore_index=True
+                    )
+                    print("Event {} : {}-{} Duration {}".format(
+                        self.event_name,
+                        self.frame_to_time(event_gap[0]),
+                        self.frame_to_time(event_gap[1]),
+                        self.frame_to_time(event_gap[1] - event_gap[0])
+                    ))
+                    self.clip_event(
+                        f"{self.event_name}",
+                        f"{self.event_name}_{_no_of_events}.mp4",
+                        event_gap[0],
+                        event_gap[1]
+                    ) if self.save_clip else ""
+
+                event_gap = [None, None]
+        print("Total {} Events: {}".format(self.event_name, _no_of_events))
+        return _event_dataframe
 
     def clip_event(self, dir_name, clip_name, from_frame_id, to_frame_id):
         video_dir_path = os.path.join("event_clips", self.video.get_video_name(), dir_name)
