@@ -5,6 +5,7 @@
 @Time:        12/01/2022 00:17
 """
 import logging
+import time
 
 import cv2
 
@@ -66,7 +67,7 @@ class SportsEventsDetection:
                     (0, 255, 0), 2)
         return frame
 
-    def video_loop(self, skip_time="00:00:00", break_on_time=None):
+    def video_loop(self, skip_time="00:00:00", break_on_time=None, visualize=False):
         skip_frames = self.video.get_frame_no(skip_time)
         break_on_frame = self.video.get_total_frame_count() if break_on_time is None else \
             self.video.get_frame_no(break_on_time)
@@ -77,18 +78,12 @@ class SportsEventsDetection:
         frame = self.video.read_frame()
         bulk_data = []
         bulk_delete_ids = []
-        viz_count = 100
-        start_time = None
 
         try:
             while frame is not None:
 
                 if break_on_frame < frame_count:
                     break
-                # if frame_count % viz_count == 0:
-                #     _fps = "{:.2f}".format(viz_count / (time.time() - start_time)) if start_time is not None else 'N/A'
-                #     print('Processing frame {}/{} @ {} fps'.format(frame_count, self.video.get_total_frame_count(), _fps))
-                #     start_time = time.time()
 
                 is_store, data_json = self.get_data(frame_count, frame)
                 if is_store:
@@ -100,9 +95,10 @@ class SportsEventsDetection:
                     self.storage.insert_bulk_data(bulk_data)
                     bulk_data = []
                     bulk_delete_ids = []
-
-                # frame = self.draw_info(frame, data_json)
-                # cv2.imshow('frame', frame)
+                if visualize:
+                    frame = self.draw_info(frame, data_json)
+                    cv2.imshow('frame', frame)
+                    time.sleep(0.02)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
                 frame_count += 1

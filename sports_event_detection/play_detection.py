@@ -6,7 +6,9 @@
 """
 import logging
 import os
+import time
 
+import cv2
 from PIL import Image
 
 from sports_event_detection.classify import Classify
@@ -59,7 +61,7 @@ class PlayDetection:
 
         return is_model_inference, data_json
 
-    def video_loop(self, skip_time="00:00:00", break_on_time=None):
+    def video_loop(self, skip_time="00:00:00", break_on_time=None, visualize=False):
         skip_frames = self.video.get_frame_no(skip_time)
         break_on_frame = self.video.get_total_frame_count() if break_on_time is None else self.video.get_frame_no(
             break_on_time)
@@ -68,16 +70,6 @@ class PlayDetection:
         frame_number = skip_frames
         self.video.seek(skip_frames)
         frame = self.video.read_frame()
-        data_json = {
-            'frame_id': 1,
-            'data':
-                {
-                    f'{self.model_name}': {
-                        'class': "",
-                        'prob': ""
-                    }
-                }
-        }
         bulk_data = []
         bulk_delete_ids = []
         try:
@@ -97,18 +89,17 @@ class PlayDetection:
                     bulk_data = []
                     bulk_delete_ids = []
 
-                if self.video_writer is not None:
+                if visualize or self.video_writer is not None:
                     out_frame = put_text(frame,
                                          f"{data_json['data'][f'{self.model_name}']['class']} - "
                                          f"{data_json['data'][f'{self.model_name}']['prob']}",
                                          (25, 25), color=(0, 0, 255))
-                    #     cv2.imshow('frame', out_frame)
-                    #     if cv2.waitKey(1) & 0xFF == ord('q'):
-                    #         break
-                    # else:
-                    self.video_writer.write(out_frame)
-                # if frame_number % 100 == 0:
-                #     print("Frame: {} - {}".format(frame_number, self.video.get_video_time()))
+
+                    if self.video_writer is not None:
+                        self.video_writer.write(out_frame)
+                    if visualize:
+                        cv2.imshow('frame', out_frame)
+                        time.sleep(0.02)
                 frame_number += 1
                 frame = self.video.read_frame()
         except KeyError as ke:
