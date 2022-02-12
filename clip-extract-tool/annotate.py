@@ -4,6 +4,7 @@
 @Author:      dulanj
 @Time:        29/01/2022 10:51
 """
+import glob
 import os
 
 from sports_event_detection.annotator import Annotate
@@ -36,6 +37,32 @@ def annotate_events():
         annotate.extract_all_clips()
 
 
+def annotate_events_v2():
+    videos = glob.glob("/home/dulanj/MSc/DialogRugby/Match*")
+    data_file = "/home/dulanj/MSc/sports-events-detection/data/LSK Annotations Clean_v3.xlsx"
+    sheet_ids = [9]
+    skip_list = []
+
+    for sheet_id in sheet_ids:
+        if sheet_id in skip_list:
+            continue
+        _video_prefix = "Match#{}_".format(sheet_id)
+        video_path = [video for video in videos if _video_prefix in video]
+        if len(video_path) == 1:
+            video_path = video_path[0]
+            sheet_name = f"Match{sheet_id}"
+            print("Annotating {} with sheet name {}".format(video_path, sheet_name))
+            annotate = Annotate(
+                video_file_path=video_path,
+                data_file_path=data_file,
+                sheet_name=sheet_name,
+                save_dir="data/clips_2c_3m_v3"
+            )
+            annotate.extract_all_clips()
+        else:
+            print("No video found for sheet id {}".format(sheet_id))
+
+
 def digital_overlay_detection():
     videos = [
         "Match#1_Navy_SC_vs_Havelock_SC_DRL_2019_20.mp4",
@@ -61,6 +88,6 @@ def digital_overlay_detection():
 
 
 if __name__ == '__main__':
-    # annotate_events()
-    digital_overlay_detection()
+    annotate_events_v2()
+    # digital_overlay_detection()
     print("Done")

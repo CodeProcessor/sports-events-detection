@@ -22,10 +22,21 @@ class ExtractTypes(enum.Enum):
 clip_type_to_freq = {
     EventTypes.lineout.name: 5,
     EventTypes.scrum.name: 10,
-    EventTypes.kick.name: 2,
+    EventTypes.kick.name: 3,
+    EventTypes.ruck.name: 10,
     EventTypes.play.name: 15,
     EventTypes.noplay.name: 15,
     EventTypes.other.name: 15,
+}
+
+clip_type_enb = {
+    EventTypes.lineout.name: False,
+    EventTypes.scrum.name: False,
+    EventTypes.kick.name: False,
+    EventTypes.ruck.name: True,
+    EventTypes.play.name: False,
+    EventTypes.noplay.name: False,
+    EventTypes.other.name: False,
 }
 
 
@@ -67,18 +78,21 @@ class Clips:
                 cv2.imwrite(_file_name, frame)
                 print(f"Image saved! - {_file_name}")
 
-            if self._extract_type == ExtractTypes.manual:
-                cv2.imshow('clip_window', frame)
-                print("Type q - exit | s - save")
-                c = cv2.waitKey(0)
-                print(c)
-                if c == 115:
-                    save_image()
-            elif self._extract_type == ExtractTypes.auto:
-                if frame_position % clip_type_to_freq[_clip_type] == 0:
-                    save_image()
+            if clip_type_enb[_clip_type]:
+                if self._extract_type == ExtractTypes.manual:
+                    cv2.imshow('clip_window', frame)
+                    print("Type q - exit | s - save")
+                    c = cv2.waitKey(0)
+                    print(c)
+                    if c == 115:
+                        save_image()
+                elif self._extract_type == ExtractTypes.auto:
+                    if frame_position % clip_type_to_freq[_clip_type] == 0:
+                        save_image()
+                else:
+                    raise Exception("Invalid extract type")
             else:
-                raise Exception("Invalid extract type")
+                print(f"Skipping {_clip_type}")
             frame_position += 1
             ret, frame = video_clip.read()
 
@@ -107,8 +121,8 @@ class Clips:
 
 
 if __name__ == '__main__':
-    path_to_clips = "../clip-extract-tool/data/clips_2c_6m_v2"
-    destination = "extracted_images_scrum_lineout_v2"
+    path_to_clips = "../clip-extract-tool/data/clips_2c_3m_v3"
+    destination = "extracted_images_scrum_lineout_kick_v3"
     _type = ExtractTypes.auto
     clip_obj = Clips(path_to_clips, _type, dest=destination)
     clip_obj.extract()

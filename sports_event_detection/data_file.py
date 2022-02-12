@@ -19,7 +19,9 @@ class RowData:
 
     def __init__(self, frame_no, duration, team_name, activity=EventTypes.other):
         self.frame_no = int(int(frame_no) * RowData.FPS)
+        self.frame_time_sec = int(frame_no)
         self.duration = int(int(duration + 1) * RowData.FPS)
+        self.duration_sec = int(duration)
         self.team_name = team_name
         self.activity = activity
 
@@ -80,6 +82,8 @@ class DataFile:
             _activity_type = EventTypes.lineout
         elif "scrum" in _activity:
             _activity_type = EventTypes.scrum
+        elif "ruck" in _activity:
+            _activity_type = EventTypes.ruck
         elif "noplay" in _activity:
             _activity_type = EventTypes.noplay
         elif "play" in _activity:

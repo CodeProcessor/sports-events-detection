@@ -13,6 +13,7 @@ class EventTypes(enum.Enum):
     other = 3
     play = 4
     noplay = 5
+    ruck = 6
 
 
 class ModelNames(enum.Enum):
