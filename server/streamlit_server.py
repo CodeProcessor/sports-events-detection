@@ -4,17 +4,22 @@
 @Author:      dulanj
 @Time:        12/02/2022 16:38
 """
-
 import streamlit as st
-from PIL import Image
 
 from backend import SportEventDetectionBackend
+
+if 'process_button' not in st.session_state:
+    st.session_state['process_button'] = False
+if 'dataframe' not in st.session_state:
+    st.session_state['dataframe'] = None
+if 'time_frame' not in st.session_state:
+    st.session_state['time_frame'] = (0, 60)
 
 sports_event_detection_backend = SportEventDetectionBackend(return_json=False)
 
 st.title('Sports Video Event Analysis System')
 
-image = Image.open('banner.jpg')
+# image = Image.open('banner.jpg')
 # st.image(image, caption='Sports Event Detection')
 url = st.text_input('Paste rugby match youtube video URL')
 
@@ -34,25 +39,27 @@ def get_video_time(seconds):
 
 try:
     info = get_info(url)
-
     enable = True
 except Exception as e:
     info = {
         'title': '',
-        'length': 100,
+        'length': st.session_state['time_frame'][1],
         'views': 0,
     }
     enable = False
     url = "Not a valid url"
 
 if enable:
-    st.video(url, start_time=100)
+    st.video(url, start_time=0)
 
 st.write('URL : {}'.format(url))
 _length = int(info['length'])
 st.write('{:10} : {}'.format("Title", info['title']))
-st.write('{} : {}'.format("Length", info['length']))
-st.write('{} : {}'.format("Views", info['views']))
+st.write('{} : {} | {} : {} | {} : {} seconds'.format(
+    "Length", get_video_time(info['length']),
+    "Views", info['views'],
+    "Duration", info['length'])
+)
 
 values = st.slider('Select video range seconds scale', 0, _length, (0, _length), disabled=not enable)
 _start_sec, _end_sec = values
@@ -60,16 +67,34 @@ _skip_time = get_video_time(_start_sec)
 _break_on_time = get_video_time(_end_sec)
 st.write(f'Video selected from **{_skip_time}** to **{_break_on_time}**')
 
+
+@st.cache
+def process_video(url, skip_time, break_on_time):
+    dataframe = sports_event_detection_backend.process_video(url, skip_time=skip_time, break_on_time=break_on_time)
+    if len(dataframe.index) > 0:
+        dataframe.drop(columns=['start_frame_id', 'end_frame_id'], inplace=True)
+        dataframe.sort_values(by=['start_time'], inplace=True)
+    return dataframe
+
+
 if st.button('Process Video', disabled=not enable):
-    st.write(f'Video Processing video from {_skip_time} to {_break_on_time} ...')
-
-    # my_bar = st.progress(0)
-    # for percent_complete in range(100):
-    #     time.sleep(0.1)
-    #     my_bar.progress(percent_complete + 1)
-
-    dataframe = sports_event_detection_backend.process_video(url, skip_time=_skip_time, break_on_time=_break_on_time)
-    dataframe.drop(columns=['start_frame_id', 'end_frame_id'], inplace=True)
+    st.session_state['process_button'] = True
+    dataframe = process_video(url, skip_time=_skip_time, break_on_time=_break_on_time)
+    st.session_state['dataframe'] = dataframe
+    st.session_state['time_frame'] = (_skip_time, _break_on_time)
     st.write('Completed!')
     st.balloons()
-    st.write(dataframe)
+
+if st.session_state['process_button']:
+    dataframe = st.session_state['dataframe']
+    if dataframe is not None:
+        if len(dataframe.index) > 0:
+            _options = list(dataframe['event_name'].unique())
+            options = st.multiselect('Show Events', _options, _options)
+            st.write(f'Results are showing from **{st.session_state["time_frame"][0]}** to '
+                     f'**{st.session_state["time_frame"][1]}**')
+            st.write(dataframe[dataframe['event_name'].isin(options)])
+        else:
+            st.write('No events found')
+    else:
+        st.write('Video is not processed')
