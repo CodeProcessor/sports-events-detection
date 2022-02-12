@@ -15,8 +15,8 @@ class YouTubeDownloader:
         self.yt = YouTube(url)
 
     def get_video_title(self):
-        return self.yt.title.replace(" ", "_").replace("/", "_").replace("(", "_").replace(")", "_").replace("&",
-                                                                                                             "_") + ".mp4"
+        return self.yt.title.replace(" ", "_").replace("/", "_").replace("(", "_").replace(")", "_") \
+                   .replace("&", "_").replace("|", "_").replace("'", "_").replace(".", "_") + ".mp4"
 
     def get_info(self):
         print("Title of video:   ", self.yt.title)
