@@ -8,6 +8,7 @@ import glob
 import os
 
 from sports_event_detection.annotator import Annotate
+from sports_event_detection.common import EventTypes
 
 
 def annotate_events():
@@ -40,7 +41,7 @@ def annotate_events():
 def annotate_events_v2():
     videos = glob.glob("/home/dulanj/MSc/DialogRugby/Match*")
     data_file = "/home/dulanj/MSc/sports-events-detection/data/LSK Annotations Clean_v3.xlsx"
-    sheet_ids = [9]
+    sheet_ids = [1]
     skip_list = []
 
     for sheet_id in sheet_ids:
@@ -56,7 +57,15 @@ def annotate_events_v2():
                 video_file_path=video_path,
                 data_file_path=data_file,
                 sheet_name=sheet_name,
-                save_dir="data/clips_2c_3m_v3"
+                save_dir="data/clips_1m_ruck",
+                clip_list=[
+                    # EventTypes.lineout,
+                    # EventTypes.scrum,
+                    # EventTypes.kick,
+                    EventTypes.ruck,
+                    # EventTypes.play,
+                    # EventTypes.noplay
+                ]
             )
             annotate.extract_all_clips()
         else:

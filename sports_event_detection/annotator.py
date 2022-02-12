@@ -7,29 +7,20 @@ import os
 
 import cv2
 
-from sports_event_detection.common import EventTypes
 from sports_event_detection.data_file import DataFile
 from sports_event_detection.video_reader import VideoReader
 from sports_event_detection.video_writer import SEDVideoWriter
 
-clip_type_enb = {
-    EventTypes.lineout.name: True,
-    EventTypes.scrum.name: True,
-    EventTypes.kick.name: False,
-    EventTypes.ruck.name: False,
-    EventTypes.play.name: False,
-    EventTypes.noplay.name: False,
-    EventTypes.other.name: False,
-}
 
 class Annotate:
-    def __init__(self, video_file_path, data_file_path, sheet_name=None, save_dir="clips"):
+    def __init__(self, video_file_path, data_file_path, sheet_name=None, save_dir="clips", clip_list=None):
         self.match_id = int((os.path.basename(video_file_path).split('#')[1].split('_')[0]))
         self.clip_save_dir = save_dir
         self.video = VideoReader(video_file_path)
         if sheet_name is None:
             sheet_name = f"Match{self.match_id}"
         self.data = DataFile(filename=data_file_path, sheetname=sheet_name, fps=self.video.get_fps())
+        self.clip_list = clip_list
 
     def test(self):
         frame = self.video.seek_n_read(10000)
@@ -54,7 +45,7 @@ class Annotate:
         if start_point == 0:
             print("Skipping invalid clip")
             return 0
-        if not clip_type_enb[activity_name]:
+        if not (self.clip_list is None or data_obj.activity in self.clip_list):
             print("Skip clip with activity type: " + activity_name)
             return 0
         clip_name = f"clip_{self.match_id}_{start_point}_{end_point}_{activity_name}.mp4"
@@ -70,5 +61,3 @@ class Annotate:
                 break
         video_writer.clean()
         # print(f"{clip_name} saved!")
-
-

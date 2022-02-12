@@ -23,33 +23,26 @@ clip_type_to_freq = {
     EventTypes.lineout.name: 5,
     EventTypes.scrum.name: 10,
     EventTypes.kick.name: 3,
-    EventTypes.ruck.name: 10,
+    EventTypes.ruck.name: 15,
     EventTypes.play.name: 15,
     EventTypes.noplay.name: 15,
     EventTypes.other.name: 15,
 }
 
-clip_type_enb = {
-    EventTypes.lineout.name: False,
-    EventTypes.scrum.name: False,
-    EventTypes.kick.name: False,
-    EventTypes.ruck.name: True,
-    EventTypes.play.name: False,
-    EventTypes.noplay.name: False,
-    EventTypes.other.name: False,
-}
+
 
 
 class Clips:
     _supported_extensions = ['avi', 'mp4']
 
-    def __init__(self, path, _type, dest=""):
+    def __init__(self, path, _type, dest="", event_list=None):
         self._path = path
         self._extract_type = _type
         if not os.path.exists(dest):
             os.makedirs(dest)
         self._destination = dest
         self.type_dict = dict()
+        self.event_list = [eve.name for eve in event_list] if event_list is not None else None
 
     def extract_clip(self, clip_path):
         _clip_info = self.clip_info(clip_path)
@@ -78,7 +71,7 @@ class Clips:
                 cv2.imwrite(_file_name, frame)
                 print(f"Image saved! - {_file_name}")
 
-            if clip_type_enb[_clip_type]:
+            if self.event_list is None or _clip_type in self.event_list:
                 if self._extract_type == ExtractTypes.manual:
                     cv2.imshow('clip_window', frame)
                     print("Type q - exit | s - save")
@@ -121,8 +114,17 @@ class Clips:
 
 
 if __name__ == '__main__':
-    path_to_clips = "../clip-extract-tool/data/clips_2c_3m_v3"
-    destination = "extracted_images_scrum_lineout_kick_v3"
+    path_to_clips = "../clip-extract-tool/data/clips_1m_ruck"
+    destination = "data/rucks_v1"
     _type = ExtractTypes.auto
-    clip_obj = Clips(path_to_clips, _type, dest=destination)
+    event_list = [
+        # EventTypes.lineout,
+        # EventTypes.scrum,
+        # EventTypes.kick,
+        EventTypes.ruck,
+        # EventTypes.play,
+        # EventTypes.noplay,
+        # EventTypes.other,
+    ]
+    clip_obj = Clips(path_to_clips, _type, dest=destination, event_list=event_list)
     clip_obj.extract()
