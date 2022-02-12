@@ -8,11 +8,11 @@ import ssl
 
 import numpy as np
 import torch.nn as nn
+import wandb
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
 
-import wandb
 from data_loader import get_train_loader, get_val_loader
 from params import *
 from pretrained_models import initialize_model
