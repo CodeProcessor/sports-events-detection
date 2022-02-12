@@ -7,9 +7,9 @@
 import os
 import shutil
 
-scrum_dataset = "/home/dulanj/MSc/sports-events-detection/data/Rugby-Scrum-V2.v1i.yolov5pytorch"
-lineout_dataset = "/home/dulanj/MSc/sports-events-detection/data/Rugby-Lineout-v2.v1i.yolov5pytorch"
-destination = "/home/dulanj/MSc/sports-events-detection/data/Rugby-Scrum-Lineout-V2.v1i.yolov5pytorch"
+scrum_dataset = "/home/dulanj/MSc/sports-events-detection/data/Rugby-Scrum-V2.v2i.yolov5pytorch"
+lineout_dataset = "/home/dulanj/MSc/sports-events-detection/data/Rugby-Lineout-v2.v2i.yolov5pytorch"
+destination = "/home/dulanj/MSc/sports-events-detection/data/Rugby-Scrum-Lineout-V2.v2i.yolov5pytorch"
 
 
 def get_id(dataset_path):

@@ -77,6 +77,7 @@ class VideoOperations:
             logging.info("Video Change FPS Successfully from %s to %s", self.video_info.get_fps(), fps)
         else:
             logging.info("Video FPS is not higher than %s", fps)
+            raise Exception("Video FPS is not higher than %s", fps)
 
         self.set_random_in_out_name()
         self.get_video_info()
@@ -93,13 +94,13 @@ class VideoOperations:
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
-    video_path = 'video_downloads/test.mp4'
+    video_path = '/home/dulanj/MSc/DialogRugby/Match#1_Navy_SC_vs_Havelock_SC_DRL_2019_20_20fps.mp4'
     video_operations = VideoOperations(video_path)
     video_operations.get_video_info()
-    # video_operations.split_video("00:00:10", "00:00:20")
-    video_operations.split_video_frames(100, 500)
-    # video_operations.change_fps(5)
-    video_operations.save("video_downloads/test_out.mp4")
+    video_operations.split_video("00:40:00", "00:50:00")
+    # video_operations.split_video_frames(100, 500)
+    video_operations.change_fps(5)
+    video_operations.save("/home/dulanj/MSc/DialogRugby/short_clips/match_1_short_clip.mp4")
 
     # video_info = VideoReader("/home/dulanj/MSc/DialogRugby/10fps/match2.mp4")
     # print(video_info.get_fps())
