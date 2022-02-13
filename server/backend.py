@@ -6,16 +6,12 @@
 """
 import hashlib
 import os
-import sys
 from datetime import datetime
 
 from sports_event_detection.common import ModelNames
 from sports_event_detection.event_detection import SportsEventsDetection
 from sports_event_detection.event_recognition import SportsEventsRecognition
 from sports_event_detection.play_detection import PlayDetection
-
-sys.path.append("/home/dulanj/MSc/sports-events-detection")
-
 from sports_event_detection.video_operations import VideoOperations
 from sports_event_detection.youtube_downloader import YouTubeDownloader
 
@@ -24,6 +20,7 @@ class SportEventDetectionBackend:
     def __init__(self, return_json=True, save_clips=False):
         self.return_json = return_json
         self.save_clips = save_clips
+        self._fps = 5
 
     def get_yt_video_info(self, video_url):
         yt_downloader = YouTubeDownloader(video_url)
@@ -37,16 +34,15 @@ class SportEventDetectionBackend:
         return _full_path
 
     def convert_video(self, video_path, output_video_name=None):
-        _fps = 5
         if output_video_name is None:
-            output_path = os.path.join(f"video_outputs_{_fps}fps", os.path.basename(video_path))
+            output_path = os.path.join(f"video_outputs_{self._fps}fps", os.path.basename(video_path))
         else:
-            output_path = os.path.join(f"video_outputs_{_fps}fps", output_video_name)
+            output_path = os.path.join(f"video_outputs_{self._fps}fps", output_video_name)
 
         if not os.path.exists(output_path):
             video_op = VideoOperations(video_path)
             video_op.get_video_info()
-            video_op.change_fps(_fps)
+            video_op.change_fps(self._fps)
             # video_op.split_video("00:01:00", "00:02:00")
 
             video_op.save(output_path)
@@ -60,7 +56,7 @@ class SportEventDetectionBackend:
 
     def get_digital(self, video_path, skip_time, break_on_time):
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
-        weight_path = '/home/dulanj/MSc/sports-events-detection/data/trained_models/digital/v3/best.pt'
+        weight_path = 'models/digital_v3.pt'
         classes = {
             0: 'digital'
         }
@@ -70,7 +66,7 @@ class SportEventDetectionBackend:
 
     def get_scrum_linout(self, video_path, skip_time, break_on_time):
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
-        weight_path = '/home/dulanj/MSc/sports-events-detection/data/trained_models/scrum-lineout/best.pt'
+        weight_path = 'models/events_v2.pt'
         classes = {
             0: 'scrum',
             1: 'line_out'
@@ -80,7 +76,7 @@ class SportEventDetectionBackend:
         sed.video_loop(skip_time, break_on_time)
 
     def play_detection(self, video_path, skip_time, break_on_time):
-        model_path = "/home/dulanj/MSc/sports-events-detection/data/trained_models/play_noplay/best-model-parameters3.pt"
+        model_path = "models/activity_v3.pt"
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
         pd_obj = PlayDetection(video_path, db_name, model_path)
         pd_obj.video_loop(skip_time, break_on_time)
@@ -140,7 +136,6 @@ class SportEventDetectionBackend:
         event_lists = []
         _converted_path = ""
         _full_path = self.download_video(video_url)
-        # output_video_name = self.get_unique_name(video_url) + ".mp4"
         if _full_path is not None:
             _converted_path = self.convert_video(_full_path)
             self.detect_sport_events(_converted_path, skip_time, break_on_time)
@@ -150,11 +145,11 @@ class SportEventDetectionBackend:
             'video_download_path': _full_path,
             'converted_path': _converted_path,
             'event_lists': event_lists
-        } if isinstance(event_lists, dict) else event_lists
+        } if isinstance(event_lists, list) else event_lists
 
 
 if __name__ == '__main__':
-    backend = SportEventDetectionBackend(return_json=False)
+    backend = SportEventDetectionBackend(return_json=True)
     # video_url_list = [
     #     "https://www.youtube.com/watch?v=HGPhsSsZE7E",
     #     "https://www.youtube.com/watch?v=hwn3NpEwBfk",
@@ -184,6 +179,7 @@ if __name__ == '__main__':
         ret = backend.process_video(_video_url, skip_time="00:00:00", break_on_time="00:10:00")
         print("Processed video: {}".format(_video_url))
         print("Time now: {}".format(datetime.now()))
+        print(ret)
         print(ret.head())
         # print(json.dumps(ret, indent=4, sort_keys=True))
 
