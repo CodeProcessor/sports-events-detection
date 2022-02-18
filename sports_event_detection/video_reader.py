@@ -144,7 +144,7 @@ class VideoReader():
                 print(e)
                 logging.error("Video time string is incorrect: {}".format(video_time_str))
                 sys.exit(1)
-        return frame_no
+        return int(frame_no)
 
     def seek(self, timestamp: int):
         if timestamp < self.__frame_count:
