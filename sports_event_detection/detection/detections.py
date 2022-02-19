@@ -5,23 +5,29 @@
 @Time:        19/02/2022 09:33
 """
 import logging
+import os
 import time
 
 import cv2
 
-from sports_event_detection.params import database_update_frequency
+from sports_event_detection.params import database_update_frequency, save_video
 from sports_event_detection.storage import Storage
 from sports_event_detection.video_reader import VideoReader
+from sports_event_detection.video_writer import SEDVideoWriter
 
 
 class Detection:
-    def __init__(self, video_path, db_name, weights_path):
+    def __init__(self, video_path, db_name, weights_path, model_name):
         self.model = None
-        self.model_name = None
+        self.model_name = model_name
         self.weights_path = weights_path
         self.storage = Storage(db_name)
         self.video = VideoReader(video_path, verbose=True)
-        self.video_writer = None  # SEDVideoWriter("output_play_noplay.mp4", 25, "output")
+        _video_basename = os.path.basename(video_path)
+        _video_name, _video_ext = os.path.splitext(_video_basename)
+        _output_video_name = f"{_video_name}_{self.model_name}_output{_video_ext}"
+        self.video_writer = SEDVideoWriter(_output_video_name, 25, "video_outputs") if \
+            save_video else None
 
     def load_model(self):
         raise NotImplementedError

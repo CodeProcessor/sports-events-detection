@@ -13,9 +13,8 @@ from sports_event_detection.yolo_model import YoloModel
 
 class SportsEventsDetection(Detection):
     def __init__(self, video_path, db_name, weights_path, classes, model_name):
-        super().__init__(video_path, db_name, weights_path)
+        super().__init__(video_path, db_name, weights_path, model_name)
         self.classes = classes
-        self.model_name = model_name
 
     def load_model(self):
         """

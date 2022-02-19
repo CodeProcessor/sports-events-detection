@@ -6,3 +6,4 @@
 """
 
 database_update_frequency = 5000
+save_video = False

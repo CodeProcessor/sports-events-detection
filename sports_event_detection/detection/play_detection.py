@@ -16,8 +16,8 @@ from sports_event_detection.draw import put_text
 
 class PlayDetection(Detection):
     def __init__(self, video_path, db_name, model_path):
-        super().__init__(video_path, db_name, model_path)
-        self.model_name = ModelNames.play_noplay_classification_model.name
+        model_name = ModelNames.play_noplay_classification_model.name
+        super().__init__(video_path, db_name, model_path, model_name)
 
     def load_model(self):
         logging.info('Loading model {}'.format(self.weights_path))
@@ -37,4 +37,4 @@ class PlayDetection(Detection):
                              f"{data_json['data'][f'{self.model_name}']['class']} - "
                              f"{data_json['data'][f'{self.model_name}']['prob']}",
                              (25, 25), color=(0, 0, 255))
-        raise out_frame
+        return out_frame
