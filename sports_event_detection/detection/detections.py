@@ -40,11 +40,11 @@ class Detection:
 
     def get_data(self, frame_count, frame, overwrite=False):
         data_json = self.storage.get_data(frame_count)
-        is_model_inference = data_json is None or self.model_name not in data_json["data"]
+        is_model_inference = overwrite or data_json is None or self.model_name not in data_json["data"]
         if is_model_inference:
             if self.model is None:
                 self.model = self.load_model()
-            if overwrite or data_json is None:
+            if data_json is None:
                 logging.debug('No data found for frame {}, predicting'.format(frame_count))
                 data_json = {
                     'frame_id': frame_count,
@@ -53,7 +53,10 @@ class Detection:
                     }
                 }
             else:
-                logging.debug('Data found for frame {}, but not specific model predicting'.format(frame_count))
+                if overwrite:
+                    logging.debug('Overwriting data for frame {}'.format(frame_count))
+                else:
+                    logging.debug('Data found for frame {}, but not specific model predicting'.format(frame_count))
                 data_json['data'][f"{self.model_name}"] = self.get_model_output(self.model, frame)
         else:
             logging.debug('Data found for frame {}, skipping'.format(frame_count))
@@ -77,7 +80,7 @@ class Detection:
                 if break_on_frame < frame_count:
                     break
 
-                is_store, data_json = self.get_data(frame_count, frame)
+                is_store, data_json = self.get_data(frame_count, frame, overwrite=overwrite)
                 if is_store:
                     bulk_data.append(data_json)
                     bulk_delete_ids.append(frame_count)

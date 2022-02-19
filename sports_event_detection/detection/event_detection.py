@@ -25,7 +25,7 @@ class SportsEventsDetection(Detection):
         return model
 
     def get_model_output(self, model, frame):
-        raise model.predict(frame).tolist()
+        return model.predict(frame).tolist()
 
     def draw_info(self, frame, data_json):
         # Visualize
