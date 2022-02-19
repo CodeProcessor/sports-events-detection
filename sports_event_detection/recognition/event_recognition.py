@@ -11,9 +11,9 @@ from collections import deque
 import pandas as pd
 from tqdm import tqdm
 
-from sports_event_detection.storage import Storage
-from sports_event_detection.video_reader import VideoReader
-from sports_event_detection.video_writer import SEDVideoWriter
+from sports_event_detection.utils.storage import Storage
+from sports_event_detection.utils.video_reader import VideoReader
+from sports_event_detection.utils.video_writer import SEDVideoWriter
 
 
 class SportsEventsRecognition:
@@ -201,7 +201,7 @@ class SportsEventsRecognition:
         return _event_dataframe
 
     def clip_event(self, dir_name, clip_name, from_frame_id, to_frame_id):
-        video_dir_path = os.path.join("event_clips", self.video.get_video_name(), dir_name)
+        video_dir_path = os.path.join("../event_clips", self.video.get_video_name(), dir_name)
         video_writer = SEDVideoWriter(clip_name, self.video.get_fps(), video_dir_path)
         self.video.seek(from_frame_id)
         for _ in range(from_frame_id, to_frame_id):

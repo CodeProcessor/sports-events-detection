@@ -14,7 +14,7 @@ from starlette.responses import StreamingResponse
 
 import sports_event_detection
 from backend import SportEventDetectionBackend
-from sports_event_detection.sports_utils import get_current_timestamp
+from sports_event_detection.extras.sports_utils import get_current_timestamp
 
 tags_metadata = [
     {

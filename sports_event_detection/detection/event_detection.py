@@ -8,7 +8,7 @@
 import cv2
 
 from sports_event_detection.detection.detections import Detection
-from sports_event_detection.yolo_model import YoloModel
+from sports_event_detection.models.yolo_model import YoloModel
 
 
 class SportsEventsDetection(Detection):

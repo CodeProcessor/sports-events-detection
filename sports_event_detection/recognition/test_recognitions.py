@@ -6,12 +6,12 @@
 """
 import os
 
-from sports_event_detection.common import ModelNames
-from sports_event_detection.event_recognition import SportsEventsRecognition
+from sports_event_detection.extras.common import ModelNames
+from sports_event_detection.recognition.event_recognition import SportsEventsRecognition
 
 
 def scrum_lineout_recognition(video_path):
-    db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
+    db_name = os.path.join("../data_storage", os.path.basename(video_path).split('.')[0] + '.db')
     classes = {
         0: 'scrum',
         1: 'lineout'
@@ -22,7 +22,7 @@ def scrum_lineout_recognition(video_path):
 
 
 def play_recognition(video_path):
-    db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
+    db_name = os.path.join("../data_storage", os.path.basename(video_path).split('.')[0] + '.db')
     classes = {
         0: 'digital'
     }

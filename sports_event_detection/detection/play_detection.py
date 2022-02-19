@@ -8,10 +8,10 @@ import logging
 
 from PIL import Image
 
-from sports_event_detection.classify import Classify
-from sports_event_detection.common import ModelNames
 from sports_event_detection.detection.detections import Detection
-from sports_event_detection.draw import put_text
+from sports_event_detection.extras.common import ModelNames
+from sports_event_detection.extras.draw import put_text
+from sports_event_detection.models.classify import Classify
 
 
 class PlayDetection(Detection):

@@ -6,9 +6,9 @@
 """
 import os
 
-from sports_event_detection.common import ModelNames
 from sports_event_detection.detection.event_detection import SportsEventsDetection
 from sports_event_detection.detection.play_detection import PlayDetection
+from sports_event_detection.extras.common import ModelNames
 
 
 def get_digital(video_path, skip_time="00:00:00", break_on_time=None):

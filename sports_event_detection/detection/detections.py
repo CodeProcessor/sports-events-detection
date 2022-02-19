@@ -10,10 +10,10 @@ import time
 
 import cv2
 
-from sports_event_detection.params import database_update_frequency, save_video
-from sports_event_detection.storage import Storage
-from sports_event_detection.video_reader import VideoReader
-from sports_event_detection.video_writer import SEDVideoWriter
+from sports_event_detection.extras.params import database_update_frequency, save_video
+from sports_event_detection.utils.storage import Storage
+from sports_event_detection.utils.video_reader import VideoReader
+from sports_event_detection.utils.video_writer import SEDVideoWriter
 
 
 class Detection:

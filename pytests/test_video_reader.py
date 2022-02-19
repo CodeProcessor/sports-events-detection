@@ -6,7 +6,7 @@
 """
 import pytest
 
-from sports_event_detection.video_reader import VideoReader
+from sports_event_detection.utils.video_reader import VideoReader
 
 
 class TestVideoReader:

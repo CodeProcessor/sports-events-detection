@@ -9,12 +9,12 @@ import json
 import os
 from datetime import datetime
 
-from sports_event_detection.common import ModelNames
 from sports_event_detection.detection.event_detection import SportsEventsDetection
 from sports_event_detection.detection.play_detection import PlayDetection
-from sports_event_detection.event_recognition import SportsEventsRecognition
-from sports_event_detection.video_operations import VideoOperations
-from sports_event_detection.youtube_downloader import YouTubeDownloader
+from sports_event_detection.extras.common import ModelNames
+from sports_event_detection.recognition.event_recognition import SportsEventsRecognition
+from sports_event_detection.utils.video_operations import VideoOperations
+from sports_event_detection.utils.youtube_downloader import YouTubeDownloader
 
 
 class SportEventDetectionBackend:
@@ -183,7 +183,7 @@ if __name__ == '__main__':
         # "https://www.youtube.com/watch?v=PeixkhanS_M"
     ]
     for _video_url in video_url_list:
-        ret = backend.process_video(_video_url, skip_time="00:00:00", break_on_time="00:10:00")
+        ret = backend.process_video(_video_url, skip_time="00:15:00", break_on_time="00:25:00")
         print("Processed video: {}".format(_video_url))
         print("Time now: {}".format(datetime.now()))
         if output_type_json:
