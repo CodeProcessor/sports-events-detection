@@ -1,116 +1,101 @@
 #!/usr/bin/env python3
 """
-@Filename:    play_noplay_classification.py
+@Filename:    detections.py
 @Author:      dulanj
-@Time:        30/01/2022 13:40
+@Time:        19/02/2022 09:33
 """
 import logging
-import os
 import time
 
 import cv2
-from PIL import Image
 
-from sports_event_detection.classify import Classify
-from sports_event_detection.common import ModelNames
-from sports_event_detection.draw import put_text
 from sports_event_detection.params import database_update_frequency
 from sports_event_detection.storage import Storage
 from sports_event_detection.video_reader import VideoReader
 
-logging.basicConfig(level=logging.INFO)
 
-
-class PlayDetection:
-    def __init__(self, video_path, db_name, model_path):
+class Detection:
+    def __init__(self, video_path, db_name, weights_path):
         self.model = None
-        self.model_path = model_path
+        self.model_name = None
+        self.weights_path = weights_path
         self.storage = Storage(db_name)
         self.video = VideoReader(video_path, verbose=True)
         self.video_writer = None  # SEDVideoWriter("output_play_noplay.mp4", 25, "output")
-        self.model_name = ModelNames.play_noplay_classification_model.name
 
     def load_model(self):
-        logging.info('Loading model {}'.format(self.model_path))
-        return Classify(self.model_path)
+        raise NotImplementedError
 
-    def get_data(self, frame_count, frame):
+    def get_model_output(self, model, frame):
+        raise NotImplementedError
+
+    def draw_info(self, frame, data_json):
+        raise NotImplementedError
+
+    def get_data(self, frame_count, frame, overwrite=False):
         data_json = self.storage.get_data(frame_count)
         is_model_inference = data_json is None or self.model_name not in data_json["data"]
         if is_model_inference:
             if self.model is None:
                 self.model = self.load_model()
-            _pred = self.model.predict(frame)
-            _pred_json = {
-                'class': _pred.get_class(),
-                'prob': _pred.get_prob()
-            }
-            if data_json is None:
+            if overwrite or data_json is None:
                 logging.debug('No data found for frame {}, predicting'.format(frame_count))
                 data_json = {
                     'frame_id': frame_count,
                     'data': {
-                        f"{self.model_name}": _pred_json
+                        f"{self.model_name}": self.get_model_output(self.model, frame)
                     }
                 }
             else:
                 logging.debug('Data found for frame {}, but not specific model predicting'.format(frame_count))
-                data_json['data'][f"{self.model_name}"] = _pred_json
+                data_json['data'][f"{self.model_name}"] = self.get_model_output(self.model, frame)
         else:
             logging.debug('Data found for frame {}, skipping'.format(frame_count))
 
         return is_model_inference, data_json
 
-    def video_loop(self, skip_time="00:00:00", break_on_time=None, visualize=False):
+    def video_loop(self, skip_time="00:00:00", break_on_time=None, visualize=False, overwrite=False):
         skip_frames = self.video.get_frame_no(skip_time)
-        break_on_frame = self.video.get_total_frame_count() if break_on_time is None else self.video.get_frame_no(
-            break_on_time)
+        break_on_frame = self.video.get_total_frame_count() if break_on_time is None else \
+            self.video.get_frame_no(break_on_time)
         duration = break_on_frame - skip_frames
         self.video.set_progress_bar_limit(duration)
-        frame_number = skip_frames
+        frame_count = skip_frames
         self.video.seek(skip_frames)
         frame = self.video.read_frame()
         bulk_data = []
         bulk_delete_ids = []
+
         try:
             while frame is not None:
-                if break_on_frame < frame_number:
+                if break_on_frame < frame_count:
                     break
 
-                pil_image = Image.fromarray(frame)
-                is_store, data_json = self.get_data(frame_number, pil_image)
+                is_store, data_json = self.get_data(frame_count, frame)
                 if is_store:
                     bulk_data.append(data_json)
-                    bulk_delete_ids.append(frame_number)
+                    bulk_delete_ids.append(frame_count)
 
                 if len(bulk_data) > database_update_frequency:
                     self.storage.delete_bulk_data(bulk_delete_ids)
                     self.storage.insert_bulk_data(bulk_data)
                     bulk_data = []
                     bulk_delete_ids = []
-
                 if visualize or self.video_writer is not None:
-                    out_frame = put_text(frame,
-                                         f"{data_json['data'][f'{self.model_name}']['class']} - "
-                                         f"{data_json['data'][f'{self.model_name}']['prob']}",
-                                         (25, 25), color=(0, 0, 255))
-
+                    out_frame = self.draw_info(frame, data_json)
                     if self.video_writer is not None:
                         self.video_writer.write(out_frame)
                     if visualize:
                         cv2.imshow('frame', out_frame)
                         time.sleep(0.02)
-                frame_number += 1
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+                frame_count += 1
                 frame = self.video.read_frame()
         except KeyError as ke:
             print(ke)
         self.storage.delete_bulk_data(bulk_delete_ids)
         self.storage.insert_bulk_data(bulk_data)
 
-
-if __name__ == '__main__':
-    model_name = "/home/dulanj/MSc/sports-events-detection/data/trained_models/play_noplay/best-model-parameters3.pt"
-    video_path = "/home/dulanj/MSc/DialogRugby/Match#56_Kandy_SC_v_Police_SC_DRL_2019_20.mp4"
-    db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
-    pd_obj = PlayDetection(video_path, db_name, model_name)
-    pd_obj.video_loop()
+        self.video.cleanup()
+        cv2.destroyAllWindows()

@@ -5,13 +5,14 @@
 @Time:        04/02/2022 13:53
 """
 import hashlib
+import json
 import os
 from datetime import datetime
 
 from sports_event_detection.common import ModelNames
-from sports_event_detection.event_detection import SportsEventsDetection
+from sports_event_detection.detection.event_detection import SportsEventsDetection
+from sports_event_detection.detection.play_detection import PlayDetection
 from sports_event_detection.event_recognition import SportsEventsRecognition
-from sports_event_detection.play_detection import PlayDetection
 from sports_event_detection.video_operations import VideoOperations
 from sports_event_detection.youtube_downloader import YouTubeDownloader
 
@@ -21,6 +22,11 @@ class SportEventDetectionBackend:
         self.return_json = return_json
         self.save_clips = save_clips
         self._fps = 5
+        self.prediction_override = {
+            "events": True,
+            "play": True,
+            "digital": True,
+        }
 
     def get_yt_video_info(self, video_url):
         yt_downloader = YouTubeDownloader(video_url)
@@ -62,7 +68,7 @@ class SportEventDetectionBackend:
         }
         model_name = ModelNames.digital_object_detection_model.name
         sed = SportsEventsDetection(video_path, db_name, weight_path, classes, model_name)
-        sed.video_loop(skip_time, break_on_time)
+        sed.video_loop(skip_time, break_on_time, overwrite=self.prediction_override['digital'])
 
     def get_scrum_linout(self, video_path, skip_time, break_on_time):
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
@@ -73,7 +79,7 @@ class SportEventDetectionBackend:
         }
         model_name = ModelNames.scrum_lineout_object_detection_model.name
         sed = SportsEventsDetection(video_path, db_name, weight_path, classes, model_name)
-        sed.video_loop(skip_time, break_on_time)
+        sed.video_loop(skip_time, break_on_time, overwrite=self.prediction_override['events'])
 
     def play_detection(self, video_path, skip_time, break_on_time):
         model_path = "models/activity_v3.pt"
@@ -149,7 +155,8 @@ class SportEventDetectionBackend:
 
 
 if __name__ == '__main__':
-    backend = SportEventDetectionBackend(return_json=True)
+    output_type_json = False
+    backend = SportEventDetectionBackend(return_json=output_type_json)
     # video_url_list = [
     #     "https://www.youtube.com/watch?v=HGPhsSsZE7E",
     #     "https://www.youtube.com/watch?v=hwn3NpEwBfk",
@@ -179,8 +186,10 @@ if __name__ == '__main__':
         ret = backend.process_video(_video_url, skip_time="00:00:00", break_on_time="00:10:00")
         print("Processed video: {}".format(_video_url))
         print("Time now: {}".format(datetime.now()))
-        print(ret)
-        print(ret.head())
+        if output_type_json:
+            print(json.dumps(ret, indent=4))
+        else:
+            print(ret.head())
         # print(json.dumps(ret, indent=4, sort_keys=True))
 
     # backend.process("https://www.youtube.com/watch?v=HGPhsSsZE7E")
