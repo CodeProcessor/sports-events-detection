@@ -23,9 +23,9 @@ class SportEventDetectionBackend:
         self.save_clips = save_clips
         self._fps = 5
         self.prediction_override = {
-            "events": True,
-            "play": True,
-            "digital": True,
+            "events": False,
+            "play": False,
+            "digital": False,
         }
 
     def get_yt_video_info(self, video_url):
@@ -72,10 +72,11 @@ class SportEventDetectionBackend:
 
     def get_scrum_linout(self, video_path, skip_time, break_on_time):
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
-        weight_path = 'models/events_v2.pt'
+        weight_path = 'models/events_v3.pt'
         classes = {
             0: 'scrum',
-            1: 'line_out'
+            1: 'line_out',
+            2: 'ruck'
         }
         model_name = ModelNames.scrum_lineout_object_detection_model.name
         sed = SportsEventsDetection(video_path, db_name, weight_path, classes, model_name)

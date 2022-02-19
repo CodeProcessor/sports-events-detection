@@ -13,7 +13,7 @@ from sports_event_detection.models.yolo_model import YoloModel
 class TestYoloModel:
     @pytest.fixture
     def yolo_model(self):
-        model_file_path = "../server/models/events_v2.pt"
+        model_file_path = "../server/models/events_v3.pt"
         model = YoloModel(model_file_path)
         return model
 
