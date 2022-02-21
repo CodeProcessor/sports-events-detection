@@ -4,9 +4,9 @@
 @Author:      dulanj
 @Time:        19/02/2022 14:42
 """
-import time
 
 import cv2
+import pandas as pd
 
 from sports_event_detection.extras.common import ModelNames
 from sports_event_detection.recognition.event_objects import Event
@@ -62,9 +62,20 @@ class TrackRecognition(Recognition):
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)
             cv2.putText(frame, self.class_labels[class_id], (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
+    def create_structured_df(self, dataframe):
+        start_time = [self.frame_to_time(st) for st in dataframe["start_frame_id"].to_list()]
+        end_time = [self.frame_to_time(et) for et in dataframe["end_frame_id"].to_list()]
+        duration = [self.frame_to_time(et - st) for st, et in
+                    zip(dataframe["start_frame_id"].to_list(), dataframe["end_frame_id"].to_list())]
+        dataframe["start_time"] = start_time
+        dataframe["end_time"] = end_time
+        dataframe["duration"] = duration
+        return dataframe
+
     def recognize(self):
         self.video.seek(self.frame_count)
         frame = self.video.read_frame()
+        [tr.set_frame_count(self.frame_count) for tr in [self.track_scrum, self.track_lineout, self.track_ruck]]
         while frame is not None:
             self.frame_count += 1
             data = self.storage.get_data(self.frame_count)
@@ -84,16 +95,26 @@ class TrackRecognition(Recognition):
             self.draw_event_list(data["data"][ModelNames.sport_events_object_detection_model.name], frame)
             print(data)
             # print("Processing frame {}".format(frame_count))
-            cv2.imshow("frame", frame)
-            c = cv2.waitKey(1)
-            if c == 27:
-                break
-            time.sleep(0.05)
+            # cv2.imshow("frame", frame)
+            # c = cv2.waitKey(1)
+            # if c == 27:
+            #     break
+            # time.sleep(0.05)
             frame = self.video.read_frame()
             print(f"Registered events Scrum: {self.track_scrum.get_event_counts()}"
                   f" Lineout: {self.track_lineout.get_event_counts()}"
                   f" Ruck: {self.track_ruck.get_event_counts()}")
+            if self.frame_count > 10000:
+                break
+
         cv2.destroyAllWindows()
+        scrum_df = self.track_scrum.events_dataframe
+        lineout_df = self.track_lineout.events_dataframe
+        ruck_df = self.track_ruck.events_dataframe
+        concat_df = pd.concat([ruck_df, scrum_df, lineout_df], ignore_index=True)
+        print(concat_df.head())
+        concat_df = self.create_structured_df(concat_df)
+        print(concat_df)
 
 
 if __name__ == '__main__':

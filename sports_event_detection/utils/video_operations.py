@@ -96,13 +96,13 @@ if __name__ == '__main__':
     #     "/home/dulanj/MSc/DialogRugby/Match#7_CH_&_FC_v_CR_&_FC_–_DRL_2019_20.mp4"
     # ]
     logging.basicConfig(level=logging.INFO)
-    _video_path = "/home/dulanj/MSc/DialogRugby/Match#3_CR_FC_v_Police_SC_DRL_2019_20.mp4"
+    _video_path = "/home/dulanj/MSc/sports-events-detection/pytests/assets/test_video.mp4"
     _video_operations = VideoOperations(_video_path)
     _video_operations.get_video_info()
     # video_operations.split_video("00:40:00", "00:50:00")
     # video_operations.split_video_frames(100, 500)
-    _video_operations.change_fps(24)
-    _video_operations.save("/home/dulanj/MSc/DialogRugby/Match#3_CR_FC_v_Police_SC_DRL_2019_20_24fps.mp4")
+    _video_operations.change_fps(20)
+    _video_operations.save("/home/dulanj/MSc/sports-events-detection/pytests/assets/test_video_20.mp4")
 
     # video_info = VideoReader("/home/dulanj/MSc/DialogRugby/10fps/match2.mp4")
     # print(video_info.get_fps())

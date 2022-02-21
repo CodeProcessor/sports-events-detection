@@ -7,6 +7,7 @@
 from collections import OrderedDict
 
 import numpy as np
+import pandas as pd
 from scipy.spatial import distance as dist
 
 from sports_event_detection.recognition.event_objects import Event
@@ -21,20 +22,34 @@ class Tracking:
         self.next_object_id = 0
         self.objects = OrderedDict()
         self.disappeared = OrderedDict()
-        self.update_count = 0
+        self.frame_count = 0
         self.event_count = 0
+        self.events_dataframe = pd.DataFrame()
+
+    def set_frame_count(self, frame_count):
+        self.frame_count = frame_count
 
     def register(self, event):
-        self.objects[self.next_object_id] = Event(self.next_object_id, event, self.event_type, self.update_count)
+        self.objects[self.next_object_id] = Event(self.next_object_id, event, self.event_type, self.frame_count)
         self.disappeared[self.next_object_id] = 0
         self.next_object_id += 1
+
+    def is_valid_event(self, event):
+        return event.update_count > self.min_update_count and event.get_lifespan() > 10
 
     def deregister(self, object_id):
         # to deregister an object ID we delete the object ID from
         # both of our respective dictionaries
         _obj: Event = self.objects[object_id]
-        if _obj.update_count > self.min_update_count:
+        if self.is_valid_event(_obj):
             self.event_count += 1
+            self.events_dataframe = self.events_dataframe.append(
+                {
+                    "event_name": self.event_type,
+                    "start_frame_id": int(_obj.event_start_frame),
+                    "end_frame_id": int(_obj.event_end_frame)
+                }, ignore_index=True
+            )
         del self.objects[object_id]
         del self.disappeared[object_id]
 
@@ -45,7 +60,7 @@ class Tracking:
         return [obj for obj in self.objects.values()]
 
     def update(self, events):
-        self.update_count += 1
+        self.frame_count += 1
         if len(events) == 0:
             for objectID in list(self.disappeared.keys()):
                 self.disappeared[objectID] += 1
@@ -89,7 +104,7 @@ class Tracking:
                     # set its new centroid, and reset the disappeared
                     # counter
                     objectID = objectIDs[row]
-                    self.objects[objectID].update(events[col])
+                    self.objects[objectID].update(events[col], end_frame=self.frame_count)
                     self.disappeared[objectID] = 0
                     # indicate that we have examined each of the row and
                     # column indexes, respectively
