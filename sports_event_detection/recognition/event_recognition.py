@@ -15,7 +15,9 @@ from sports_event_detection.recognition.recognition import Recognition
 
 class SportsEventsRecognition(Recognition):
     def __init__(self, video_path, db_name, classes, save_clip=False):
-        super().__init__(video_path, db_name, classes, save_clip)
+        self.classes = classes
+        self.class_reverse = {v: k for k, v in self.classes.items()}
+        super().__init__(video_path, db_name, save_clip)
 
     def is_correct_event(self, event, event_name):
         ret = False

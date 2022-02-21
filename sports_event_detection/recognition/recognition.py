@@ -5,7 +5,6 @@
 @Time:        19/02/2022 12:38
 """
 import os
-import time
 
 from sports_event_detection.utils.storage import Storage
 from sports_event_detection.utils.video_reader import VideoReader
@@ -13,19 +12,16 @@ from sports_event_detection.utils.video_writer import SEDVideoWriter
 
 
 class Recognition:
-    def __init__(self, video_path, db_name, classes, save_clip=False):
+    def __init__(self, video_path, db_name, save_clip=False):
         self.model = None
-        self.video = VideoReader(video_path)
+        self.video = VideoReader(video_path, verbose=True)
         self.storage = Storage(db_name)
-        self.classes = classes
-        self.class_reverse = {v: k for k, v in self.classes.items()}
         self.window_size = int(1 * self.video.get_fps())
         self.event_name = None
         print("Video path: {}\n"
               "DB path: {}\n"
               "Total frames: {}".format(video_path, db_name, self.video.get_total_frame_count()))
         self.save_clip = save_clip
-        time.sleep(2)
 
     def frame_to_time(self, frame_id):
         seconds = frame_id / self.video.get_fps()

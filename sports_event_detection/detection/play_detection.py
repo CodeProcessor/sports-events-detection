@@ -16,7 +16,7 @@ from sports_event_detection.models.classify import Classify
 
 class PlayDetection(Detection):
     def __init__(self, video_path, db_name, model_path):
-        model_name = ModelNames.play_noplay_classification_model.name
+        model_name = ModelNames.activity_classification_model.name
         super().__init__(video_path, db_name, model_path, model_name)
 
     def load_model(self):

@@ -17,6 +17,6 @@ class EventTypes(enum.Enum):
 
 
 class ModelNames(enum.Enum):
-    scrum_lineout_object_detection_model = 0
+    sport_events_object_detection_model = 0
     digital_object_detection_model = 1
-    play_noplay_classification_model = 2
+    activity_classification_model = 2

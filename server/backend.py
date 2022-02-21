@@ -78,7 +78,7 @@ class SportEventDetectionBackend:
             1: 'line_out',
             2: 'ruck'
         }
-        model_name = ModelNames.scrum_lineout_object_detection_model.name
+        model_name = ModelNames.sport_events_object_detection_model.name
         sed = SportsEventsDetection(video_path, db_name, weight_path, classes, model_name)
         sed.video_loop(skip_time, break_on_time, overwrite=self.prediction_override['events'])
 
@@ -96,7 +96,7 @@ class SportEventDetectionBackend:
         ef = SportsEventsRecognition(video_path, db_name, classes, save_clip=self.save_clips)
         mod_eve_list = [
             (ModelNames.digital_object_detection_model.name, 'digital'),
-            (ModelNames.play_noplay_classification_model.name, 'noplay')
+            (ModelNames.activity_classification_model.name, 'noplay')
         ]
         _noplay_event_summary_dict = ef.find_event(
             mod_eve_list,
@@ -111,17 +111,18 @@ class SportEventDetectionBackend:
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
         classes = {
             0: 'scrum',
-            1: 'lineout'
+            1: 'line_out',
+            2: 'ruck'
         }
         ef = SportsEventsRecognition(video_path, db_name, classes, save_clip=self.save_clips)
         _scrum_event_summary_dict = ef.find_event(
-            [(ModelNames.scrum_lineout_object_detection_model.name, 'scrum')],
+            [(ModelNames.sport_events_object_detection_model.name, 'scrum')],
             skip_time,
             break_on_time,
             self.return_json
         )
         _line_out_event_summary_dict = ef.find_event(
-            [(ModelNames.scrum_lineout_object_detection_model.name, 'lineout')],
+            [(ModelNames.sport_events_object_detection_model.name, 'lineout')],
             skip_time,
             break_on_time,
             self.return_json
@@ -158,33 +159,31 @@ class SportEventDetectionBackend:
 if __name__ == '__main__':
     output_type_json = False
     backend = SportEventDetectionBackend(return_json=output_type_json)
-    # video_url_list = [
-    #     "https://www.youtube.com/watch?v=HGPhsSsZE7E",
-    #     "https://www.youtube.com/watch?v=hwn3NpEwBfk",
-    #     "https://www.youtube.com/watch?v=DhdYasfUcds",
-    #     "https://www.youtube.com/watch?v=2w1dwDE57jw",
-    #     "https://www.youtube.com/watch?v=WnrOpvy0U_w",
-    #     "https://www.youtube.com/watch?v=KMcrbMoJ2Mk"
-    # ]
     video_url_list = [
+        "https://www.youtube.com/watch?v=HGPhsSsZE7E",
+        "https://www.youtube.com/watch?v=hwn3NpEwBfk",
+        "https://www.youtube.com/watch?v=DhdYasfUcds",
+        "https://www.youtube.com/watch?v=2w1dwDE57jw",
+        "https://www.youtube.com/watch?v=WnrOpvy0U_w",
+        "https://www.youtube.com/watch?v=KMcrbMoJ2Mk"
         "https://www.youtube.com/watch?v=ab--JFZNxMM",
-        # "https://www.youtube.com/watch?v=ObFxcZtUkCg",
-        # "https://www.youtube.com/watch?v=ol_0V671OQ8",
-        # "https://www.youtube.com/watch?v=3qcArzTl5sk",
-        # "https://www.youtube.com/watch?v=yx1ORXAIhNA",
-        # "https://www.youtube.com/watch?v=hMjiUFExsRs",
-        # "https://www.youtube.com/watch?v=Q51uDv1YzuU",
-        # "https://www.youtube.com/watch?v=OLtz28d0OCI",
-        # "https://www.youtube.com/watch?v=3iVlBS-vZuY",
-        # "https://www.youtube.com/watch?v=VzGdHEcqcNM",
-        # "https://www.youtube.com/watch?v=a-rhpeAcNpY",
-        # "https://www.youtube.com/watch?v=2vGH7TzYw6k",
-        # "https://www.youtube.com/watch?v=x4rvFbkcox4",
-        # "https://www.youtube.com/watch?v=rCc9CxdLTrA",
-        # "https://www.youtube.com/watch?v=PeixkhanS_M"
+        "https://www.youtube.com/watch?v=ObFxcZtUkCg",
+        "https://www.youtube.com/watch?v=ol_0V671OQ8",
+        "https://www.youtube.com/watch?v=3qcArzTl5sk",
+        "https://www.youtube.com/watch?v=yx1ORXAIhNA",
+        "https://www.youtube.com/watch?v=hMjiUFExsRs",
+        "https://www.youtube.com/watch?v=Q51uDv1YzuU",
+        "https://www.youtube.com/watch?v=OLtz28d0OCI",
+        "https://www.youtube.com/watch?v=3iVlBS-vZuY",
+        "https://www.youtube.com/watch?v=VzGdHEcqcNM",
+        "https://www.youtube.com/watch?v=a-rhpeAcNpY",
+        "https://www.youtube.com/watch?v=2vGH7TzYw6k",
+        "https://www.youtube.com/watch?v=x4rvFbkcox4",
+        "https://www.youtube.com/watch?v=rCc9CxdLTrA",
+        "https://www.youtube.com/watch?v=PeixkhanS_M"
     ]
     for _video_url in video_url_list:
-        ret = backend.process_video(_video_url, skip_time="00:15:00", break_on_time="00:25:00")
+        ret = backend.process_video(_video_url, skip_time="00:00:00", break_on_time=None)
         print("Processed video: {}".format(_video_url))
         print("Time now: {}".format(datetime.now()))
         if output_type_json:
