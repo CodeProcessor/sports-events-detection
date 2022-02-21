@@ -13,8 +13,11 @@ from sports_event_detection.recognition.event_objects import Event
 
 
 class Tracking:
-    def __init__(self):
-        self.disappeared_max_frames = 5
+    def __init__(self, event_type, max_disappeared=5, min_update_count=10):
+        self.event_type = event_type
+        self.min_update_count = min_update_count
+
+        self.disappeared_max_frames = max_disappeared
         self.next_object_id = 0
         self.objects = OrderedDict()
         self.disappeared = OrderedDict()
@@ -22,7 +25,7 @@ class Tracking:
         self.event_count = 0
 
     def register(self, event):
-        self.objects[self.next_object_id] = Event(self.next_object_id, event, self.update_count)
+        self.objects[self.next_object_id] = Event(self.next_object_id, event, self.event_type, self.update_count)
         self.disappeared[self.next_object_id] = 0
         self.next_object_id += 1
 
@@ -30,7 +33,7 @@ class Tracking:
         # to deregister an object ID we delete the object ID from
         # both of our respective dictionaries
         _obj: Event = self.objects[object_id]
-        if _obj.update_count > 10:
+        if _obj.update_count > self.min_update_count:
             self.event_count += 1
         del self.objects[object_id]
         del self.disappeared[object_id]

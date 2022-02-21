@@ -7,10 +7,10 @@
 
 
 class Event:
-    def __init__(self, event_id, event, start_frame):
+    def __init__(self, event_id, event, event_type, start_frame):
         self.event_id = event_id
         self.event_name = f"Event-{event_id}"
-        self.event_type = "event_type"
+        self.event_type = event_type
         self.event_start_frame = start_frame
         self.event_end_frame = None
 

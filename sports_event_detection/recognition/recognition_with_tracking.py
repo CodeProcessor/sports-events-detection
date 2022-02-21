@@ -17,7 +17,9 @@ from sports_event_detection.recognition.tracking import Tracking
 class TrackRecognition(Recognition):
     def __init__(self, video_path, db_name):
         super().__init__(video_path, db_name)
-        self.tracking = Tracking()
+        self.track_scrum = Tracking("scrum")
+        self.track_lineout = Tracking("lineout")
+        self.track_ruck = Tracking("ruck")
         self.frame_count = 7090
         self.class_labels = {
             0: 'scrum',
@@ -67,7 +69,17 @@ class TrackRecognition(Recognition):
             self.frame_count += 1
             data = self.storage.get_data(self.frame_count)
             events = data["data"][ModelNames.sport_events_object_detection_model.name]
-            _object_list = self.tracking.update(events)
+
+            scrum_events = [event for event in events if event[-1] == 0.0]
+            lineout_events = [event for event in events if event[-1] == 1.0]
+            ruck_events = [event for event in events if event[-1] == 2.0]
+
+            _object_list_1 = self.track_scrum.update(scrum_events)
+            _object_list_2 = self.track_lineout.update(lineout_events)
+            _object_list_3 = self.track_ruck.update(ruck_events)
+
+            _object_list = _object_list_1 + _object_list_2 + _object_list_3
+
             self.draw_object_list(_object_list, frame)
             self.draw_event_list(data["data"][ModelNames.sport_events_object_detection_model.name], frame)
             print(data)
@@ -78,7 +90,9 @@ class TrackRecognition(Recognition):
                 break
             time.sleep(0.05)
             frame = self.video.read_frame()
-            print(f"Registered events: {self.tracking.get_event_counts()}")
+            print(f"Registered events Scrum: {self.track_scrum.get_event_counts()}"
+                  f" Lineout: {self.track_lineout.get_event_counts()}"
+                  f" Ruck: {self.track_ruck.get_event_counts()}")
         cv2.destroyAllWindows()
 
 
