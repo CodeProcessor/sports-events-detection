@@ -37,15 +37,24 @@ class Event:
         self.event_end_frame = end_frame
         self.update_count += 1
 
-    def get_bounding_box(self, height, width):
-        return [int(element) for element in
+    def get_bounding_box(self, height=None, width=None):
+        return [
+            self.x1,
+            self.y1,
+            self.x2,
+            self.y2
+        ] \
+            if height is None or width is None \
+            else \
+            [
+                int(element) for element in
                 [
                     self.x1 * width,
                     self.y1 * height,
                     self.x2 * width,
                     self.y2 * height
                 ]
-                ]
+            ]
 
     def get_centroid(self):
         return (self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2

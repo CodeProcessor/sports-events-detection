@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import distance as dist
 
+from sports_event_detection.extras.sports_utils import iou
 from sports_event_detection.recognition.event_objects import Event
 
 
@@ -24,7 +25,10 @@ class Tracking:
         self.disappeared = OrderedDict()
         self.frame_count = 0
         self.event_count = 0
-        self.events_dataframe = pd.DataFrame()
+        self.events_dataframe = pd.DataFrame(columns=["event_name", "start_frame_id", "end_frame_id"])
+
+    def get_df(self):
+        return self.events_dataframe
 
     def set_frame_count(self, frame_count):
         self.frame_count = frame_count
@@ -59,6 +63,7 @@ class Tracking:
     def get_event_object_list(self):
         return [obj for obj in self.objects.values()]
 
+
     def update(self, events):
         self.frame_count += 1
         if len(events) == 0:
@@ -72,20 +77,20 @@ class Tracking:
             return self.get_event_object_list()
         else:
             # loop over the bounding box rectangles
-            inputCentroids = np.zeros((len(events), 2), dtype="float")
+            inputBoundingBoxes = np.zeros((len(events), 4), dtype="float")
             # loop over the bounding box rectangles
-            for (i, (x, y, w, h, _, _)) in enumerate(events):
+            for (i, (x1, y1, x2, y2, _, _)) in enumerate(events):
                 # use the bounding box coordinates to derive the centroid
-                inputCentroids[i] = (x, y)
+                inputBoundingBoxes[i] = (x1, y1, x2, y2)
 
             if len(self.objects) == 0:
                 for i in range(0, len(events)):
                     self.register(events[i])
             else:
                 objectIDs = list(self.objects.keys())
-                objectCentroids = list([obj.get_centroid() for obj in self.objects.values()]) if len(
+                objectCentroids = list([obj.get_bounding_box() for obj in self.objects.values()]) if len(
                     self.objects.values()) > 0 else [[]]
-                D = dist.cdist(np.array(objectCentroids), inputCentroids)
+                D = dist.cdist(np.array(objectCentroids), inputBoundingBoxes, lambda a, b: iou(a, b))
                 # list
                 rows = D.min(axis=1).argsort()
                 cols = D.argmin(axis=1)[rows]

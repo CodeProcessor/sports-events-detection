@@ -14,3 +14,25 @@ def get_current_timestamp():
     """
     now = datetime.now()
     return now.strftime("%d-%m-%Y %H:%M:%S")
+
+
+def iou(box1, box2):
+    """
+    Calculate the Intersection over Union (IoU) of two bounding boxes.
+    """
+    # determine the coordinates of the intersection rectangle
+    x_a = max(box1[0], box2[0])
+    y_a = max(box1[1], box2[1])
+    x_b = min(box1[2], box2[2])
+
+    y_b = min(box1[3], box2[3])
+    if x_b - x_a > 0 and y_b - y_a > 0:
+        # compute the area of intersection rectangle
+        inter_area = (x_b - x_a) * (y_b - y_a)
+        union_area = (box1[2] - box1[0]) * (box1[3] - box1[1]) + (box2[2] - box2[0]) * (box2[3] - box2[1])
+        print("interArea:", inter_area)
+        print("unionArea:", union_area)
+        _iou = inter_area / union_area
+    else:
+        _iou = 0
+    return _iou
