@@ -77,6 +77,7 @@ def process_video(url, skip_time, break_on_time):
     if len(dataframe.index) > 0:
         dataframe.drop(columns=['start_frame_id', 'end_frame_id'], inplace=True)
         dataframe.sort_values(by=['start_time'], inplace=True)
+        dataframe.reset_index(drop=True, inplace=True)
     return dataframe
 
 

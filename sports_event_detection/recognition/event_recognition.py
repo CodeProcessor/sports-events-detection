@@ -21,7 +21,7 @@ class SportsEventsRecognition(Recognition):
 
     def is_correct_event(self, event, event_name):
         ret = False
-        if event_name in ["scrum", "lineout"]:
+        if event_name in ["scrum", "line_out", "ruck"]:
             _is_same_event = int(event[-1]) == self.class_reverse[event_name]
             if _is_same_event:
                 # print(event)

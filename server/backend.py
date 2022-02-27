@@ -122,13 +122,20 @@ class SportEventDetectionBackend:
             self.return_json
         )
         _line_out_event_summary_dict = ef.find_event(
-            [(ModelNames.sport_events_object_detection_model.name, 'lineout')],
+            [(ModelNames.sport_events_object_detection_model.name, 'line_out')],
             skip_time,
             break_on_time,
             self.return_json
         )
-        return [_scrum_event_summary_dict, _line_out_event_summary_dict] if isinstance(_scrum_event_summary_dict, dict) \
-            else _scrum_event_summary_dict.append(_line_out_event_summary_dict)
+        _ruck_event_summary_dict = ef.find_event(
+            [(ModelNames.sport_events_object_detection_model.name, 'ruck')],
+            skip_time,
+            break_on_time,
+            self.return_json
+        )
+        return [_scrum_event_summary_dict, _line_out_event_summary_dict, _ruck_event_summary_dict] if \
+            isinstance(_scrum_event_summary_dict, dict) \
+            else _scrum_event_summary_dict.append(_line_out_event_summary_dict).append(_ruck_event_summary_dict)
 
     def detect_sport_events(self, video_path, skip_time, break_on_time):
         self.get_digital(video_path, skip_time, break_on_time)
@@ -146,7 +153,7 @@ class SportEventDetectionBackend:
         _full_path = self.download_video(video_url)
         if _full_path is not None:
             _converted_path = self.convert_video(_full_path)
-            self.detect_sport_events(_converted_path, skip_time, break_on_time)
+            # self.detect_sport_events(_converted_path, skip_time, break_on_time)
             event_lists = self.recognize_sport_event(_converted_path, skip_time, break_on_time)
         return {
             'video_url': video_url,
@@ -160,27 +167,28 @@ if __name__ == '__main__':
     output_type_json = False
     backend = SportEventDetectionBackend(return_json=output_type_json)
     video_url_list = [
-        "https://www.youtube.com/watch?v=HGPhsSsZE7E",
-        "https://www.youtube.com/watch?v=hwn3NpEwBfk",
-        "https://www.youtube.com/watch?v=DhdYasfUcds",
-        "https://www.youtube.com/watch?v=2w1dwDE57jw",
-        "https://www.youtube.com/watch?v=WnrOpvy0U_w",
-        "https://www.youtube.com/watch?v=KMcrbMoJ2Mk"
-        "https://www.youtube.com/watch?v=ab--JFZNxMM",
-        "https://www.youtube.com/watch?v=ObFxcZtUkCg",
-        "https://www.youtube.com/watch?v=ol_0V671OQ8",
-        "https://www.youtube.com/watch?v=3qcArzTl5sk",
-        "https://www.youtube.com/watch?v=yx1ORXAIhNA",
-        "https://www.youtube.com/watch?v=hMjiUFExsRs",
-        "https://www.youtube.com/watch?v=Q51uDv1YzuU",
-        "https://www.youtube.com/watch?v=OLtz28d0OCI",
-        "https://www.youtube.com/watch?v=3iVlBS-vZuY",
-        "https://www.youtube.com/watch?v=VzGdHEcqcNM",
-        "https://www.youtube.com/watch?v=a-rhpeAcNpY",
-        "https://www.youtube.com/watch?v=2vGH7TzYw6k",
-        "https://www.youtube.com/watch?v=x4rvFbkcox4",
-        "https://www.youtube.com/watch?v=rCc9CxdLTrA",
-        "https://www.youtube.com/watch?v=PeixkhanS_M"
+        "https://www.youtube.com/watch?v=hwn3NpEwBfk"
+        # "https://www.youtube.com/watch?v=HGPhsSsZE7E",
+        # "https://www.youtube.com/watch?v=hwn3NpEwBfk",
+        # "https://www.youtube.com/watch?v=DhdYasfUcds",
+        # "https://www.youtube.com/watch?v=2w1dwDE57jw",
+        # "https://www.youtube.com/watch?v=WnrOpvy0U_w",
+        # "https://www.youtube.com/watch?v=KMcrbMoJ2Mk"
+        # "https://www.youtube.com/watch?v=ab--JFZNxMM",
+        # "https://www.youtube.com/watch?v=ObFxcZtUkCg",
+        # "https://www.youtube.com/watch?v=ol_0V671OQ8",
+        # "https://www.youtube.com/watch?v=3qcArzTl5sk",
+        # "https://www.youtube.com/watch?v=yx1ORXAIhNA",
+        # "https://www.youtube.com/watch?v=hMjiUFExsRs",
+        # "https://www.youtube.com/watch?v=Q51uDv1YzuU",
+        # "https://www.youtube.com/watch?v=OLtz28d0OCI",
+        # "https://www.youtube.com/watch?v=3iVlBS-vZuY",
+        # "https://www.youtube.com/watch?v=VzGdHEcqcNM",
+        # "https://www.youtube.com/watch?v=a-rhpeAcNpY",
+        # "https://www.youtube.com/watch?v=2vGH7TzYw6k",
+        # "https://www.youtube.com/watch?v=x4rvFbkcox4",
+        # "https://www.youtube.com/watch?v=rCc9CxdLTrA",
+        # "https://www.youtube.com/watch?v=PeixkhanS_M"
     ]
     for _video_url in video_url_list:
         ret = backend.process_video(_video_url, skip_time="00:00:00", break_on_time=None)
