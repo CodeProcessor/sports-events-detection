@@ -17,10 +17,10 @@ from sports_event_detection.recognition.tracking import Tracking
 class TrackRecognition(Recognition):
     def __init__(self, video_path, db_name):
         super().__init__(video_path, db_name)
-        self.track_scrum = Tracking("scrum")
-        self.track_lineout = Tracking("lineout")
-        self.track_ruck = Tracking("ruck")
-        self.frame_count = 7090
+        self.track_scrum = Tracking("scrum", min_lifespan=30)
+        self.track_lineout = Tracking("lineout", min_lifespan=30)
+        self.track_ruck = Tracking("ruck", min_lifespan=15)
+        self.frame_count = 0
         self.class_labels = {
             0: 'scrum',
             1: 'line_out',
@@ -72,40 +72,46 @@ class TrackRecognition(Recognition):
         dataframe["duration"] = duration
         return dataframe
 
-    def recognize(self):
+    def recognize(self, visualize=False):
         self.video.seek(self.frame_count)
         frame = self.video.read_frame()
+        total_frame_count = self.video.get_total_frame_count()
         [tr.set_frame_count(self.frame_count) for tr in [self.track_scrum, self.track_lineout, self.track_ruck]]
         while frame is not None:
             self.frame_count += 1
+            if self.frame_count > total_frame_count:
+                break
             data = self.storage.get_data(self.frame_count)
+            if data is None:
+                continue
             events = data["data"][ModelNames.sport_events_object_detection_model.name]
 
             scrum_events = [event for event in events if event[-1] == 0.0]
-            lineout_events = [event for event in events if event[-1] == 1.0]
+            line_out_events = [event for event in events if event[-1] == 1.0]
             ruck_events = [event for event in events if event[-1] == 2.0]
 
+            _object_list_1 = _object_list_2 = _object_list_3 = []
             _object_list_1 = self.track_scrum.update(scrum_events)
-            _object_list_2 = self.track_lineout.update(lineout_events)
+            _object_list_2 = self.track_lineout.update(line_out_events)
             _object_list_3 = self.track_ruck.update(ruck_events)
 
             _object_list = _object_list_1 + _object_list_2 + _object_list_3
 
-            self.draw_object_list(_object_list, frame)
-            self.draw_event_list(data["data"][ModelNames.sport_events_object_detection_model.name], frame)
-            print(data)
-            # print("Processing frame {}".format(frame_count))
-            # cv2.imshow("frame", frame)
-            # c = cv2.waitKey(1)
-            # if c == 27:
-            #     break
-            # time.sleep(0.05)
+            if visualize:
+                self.draw_object_list(_object_list, frame)
+                self.draw_event_list(data["data"][ModelNames.sport_events_object_detection_model.name], frame)
+                cv2.imshow("frame", frame)
+                c = cv2.waitKey(1)
+                if c == 27:
+                    break
+                import time
+                time.sleep(0.05)
+                print(f"Registered events Scrum: {self.track_scrum.get_event_counts()}"
+                      f" Line-out: {self.track_lineout.get_event_counts()}"
+                      f" Ruck: {self.track_ruck.get_event_counts()}")
             frame = self.video.read_frame()
-            print(f"Registered events Scrum: {self.track_scrum.get_event_counts()}"
-                  f" Lineout: {self.track_lineout.get_event_counts()}"
-                  f" Ruck: {self.track_ruck.get_event_counts()}")
-            if self.frame_count > 10000:
-                break
+            # if self.frame_count > 10000:
+            #     break
 
         cv2.destroyAllWindows()
         scrum_df = self.track_scrum.events_dataframe
@@ -115,10 +121,12 @@ class TrackRecognition(Recognition):
         print(concat_df.head())
         concat_df = self.create_structured_df(concat_df)
         print(concat_df)
+        return concat_df
 
 
 if __name__ == '__main__':
     _video_path = '/home/dulanj/MSc/sports-events-detection/server/video_outputs_5fps/CH___FC_v_CR___FC_–_DRL_2019_20_#7.mp4'
     _db_name = '/home/dulanj/MSc/sports-events-detection/server/data_storage/CH___FC_v_CR___FC_–_DRL_2019_20_#7.db'
     tr = TrackRecognition(_video_path, _db_name)
-    tr.recognize()
+    dataframe = tr.recognize()
+    dataframe.to_excel("CH___FC_v_CR___FC_–_DRL_2019_20_#7.xlsx")

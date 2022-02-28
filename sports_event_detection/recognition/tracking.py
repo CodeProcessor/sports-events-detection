@@ -15,9 +15,10 @@ from sports_event_detection.recognition.event_objects import Event
 
 
 class Tracking:
-    def __init__(self, event_type, max_disappeared=5, min_update_count=10):
+    def __init__(self, event_type, max_disappeared=5, min_update_count=10, min_lifespan=10):
         self.event_type = event_type
         self.min_update_count = min_update_count
+        self.min_lifespan = min_lifespan
 
         self.disappeared_max_frames = max_disappeared
         self.next_object_id = 0
@@ -39,7 +40,7 @@ class Tracking:
         self.next_object_id += 1
 
     def is_valid_event(self, event):
-        return event.update_count > self.min_update_count and event.get_lifespan() > 10
+        return event.update_count > self.min_update_count and event.get_lifespan() > self.min_lifespan
 
     def deregister(self, object_id):
         # to deregister an object ID we delete the object ID from
@@ -63,76 +64,78 @@ class Tracking:
     def get_event_object_list(self):
         return [obj for obj in self.objects.values()]
 
-
     def update(self, events):
         self.frame_count += 1
         if len(events) == 0:
-            for objectID in list(self.disappeared.keys()):
-                self.disappeared[objectID] += 1
+            for object_id in list(self.disappeared.keys()):
+                self.disappeared[object_id] += 1
                 # if we have reached a maximum number of consecutive
                 # frames where a given object has been marked as
                 # missing, deregister it
-                if self.disappeared[objectID] > self.disappeared_max_frames:
-                    self.deregister(objectID)
+                if self.disappeared[object_id] > self.disappeared_max_frames:
+                    self.deregister(object_id)
             return self.get_event_object_list()
         else:
             # loop over the bounding box rectangles
-            inputBoundingBoxes = np.zeros((len(events), 4), dtype="float")
+            input_bounding_boxes = np.zeros((len(events), 4), dtype="float")
             # loop over the bounding box rectangles
             for (i, (x1, y1, x2, y2, _, _)) in enumerate(events):
                 # use the bounding box coordinates to derive the centroid
-                inputBoundingBoxes[i] = (x1, y1, x2, y2)
+                input_bounding_boxes[i] = (x1, y1, x2, y2)
 
             if len(self.objects) == 0:
                 for i in range(0, len(events)):
                     self.register(events[i])
             else:
-                objectIDs = list(self.objects.keys())
-                objectCentroids = list([obj.get_bounding_box() for obj in self.objects.values()]) if len(
+                object_i_ds = list(self.objects.keys())
+                object_centroids = list([obj.get_bounding_box() for obj in self.objects.values()]) if len(
                     self.objects.values()) > 0 else [[]]
-                D = dist.cdist(np.array(objectCentroids), inputBoundingBoxes, lambda a, b: iou(a, b))
+                D = dist.cdist(np.array(object_centroids), input_bounding_boxes, lambda a, b: iou(a, b))
                 # list
-                rows = D.min(axis=1).argsort()
-                cols = D.argmin(axis=1)[rows]
+                rows = D.max(axis=1).argsort()[::-1]
+                cols = D.argmax(axis=1)[rows]
 
-                usedRows = set()
-                usedCols = set()
+                used_rows = set()
+                used_cols = set()
                 # loop over the combination of the (row, column) index
                 # tuples
                 for (row, col) in zip(rows, cols):
                     # if we have already examined either the row or
                     # column value before, ignore it
                     # val
-                    if row in usedRows or col in usedCols:
+                    if D[row, col] == 0:
+                        # print("D[row, col] == 0")
+                        continue
+                    if row in used_rows or col in used_cols:
                         continue
                     # otherwise, grab the object ID for the current row,
                     # set its new centroid, and reset the disappeared
                     # counter
-                    objectID = objectIDs[row]
-                    self.objects[objectID].update(events[col], end_frame=self.frame_count)
-                    self.disappeared[objectID] = 0
+                    object_id = object_i_ds[row]
+                    self.objects[object_id].update(events[col], end_frame=self.frame_count)
+                    self.disappeared[object_id] = 0
                     # indicate that we have examined each of the row and
                     # column indexes, respectively
-                    usedRows.add(row)
-                    usedCols.add(col)
+                    used_rows.add(row)
+                    used_cols.add(col)
 
-                unusedRows = set(range(0, D.shape[0])).difference(usedRows)
-                unusedCols = set(range(0, D.shape[1])).difference(usedCols)
+                unused_rows = set(range(0, D.shape[0])).difference(used_rows)
+                unused_cols = set(range(0, D.shape[1])).difference(used_cols)
 
                 if D.shape[0] >= D.shape[1]:
                     # loop over the unused row indexes
-                    for row in unusedRows:
+                    for row in unused_rows:
                         # grab the object ID for the corresponding row
                         # index and increment the disappeared counter
-                        objectID = objectIDs[row]
-                        self.disappeared[objectID] += 1
+                        object_id = object_i_ds[row]
+                        self.disappeared[object_id] += 1
                         # check to see if the number of consecutive
                         # frames the object has been marked "disappeared"
                         # for warrants deregistering the object
-                        if self.disappeared[objectID] > self.disappeared_max_frames:
-                            self.deregister(objectID)
+                        if self.disappeared[object_id] > self.disappeared_max_frames:
+                            self.deregister(object_id)
                 else:
-                    for col in unusedCols:
+                    for col in unused_cols:
                         self.register(events[col])
 
         return self.get_event_object_list()
