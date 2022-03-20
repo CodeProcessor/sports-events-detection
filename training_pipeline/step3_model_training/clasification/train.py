@@ -8,11 +8,11 @@ import ssl
 
 import numpy as np
 import torch.nn as nn
-import wandb
 from torch import optim
 from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
 
+import wandb
 from data_loader import get_train_loader, get_val_loader
 from params import *
 from pretrained_models import initialize_model
@@ -89,7 +89,7 @@ def val_fn(val_loader, model, loss_fn):
 def main():
     # model = ClassificationModel(num_classes=configs["data"]["no_of_classes"]).to(DEVICE)
     # model = torch.hub.load('pytorch/vision:v0.10.0', 'mobilenet_v2', pretrained=True).to(DEVICE)
-    model_name = "resnet"
+    model_name = "efficientnet"
     num_classes = 2
     feature_extract = False
     model, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
@@ -109,6 +109,9 @@ def main():
 
     train_loader = get_train_loader()
     val_loader = get_val_loader()
+
+    # Loading weights and biases
+    wandb.init(project="play_no-play_classification", entity="dulan20", config=flatten_dict(configs))
 
     """
     Go through the training data set and train the model for a number of epochs
@@ -159,5 +162,4 @@ def flatten_dict(dd, separator='_', prefix=''):
 
 
 if __name__ == '__main__':
-    wandb.init(project="play_no-play_classification", entity="dulan20", config=flatten_dict(configs))
     main()

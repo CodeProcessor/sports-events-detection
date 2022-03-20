@@ -1,7 +1,7 @@
 # sample config defaults file
 model:
-  epochs: 50
-  batch_size: 16
+  epochs: 20
+  batch_size: 32
   lr: 0.00001
   channels: 3
   weight_decay: 0
@@ -9,8 +9,8 @@ model:
   pin_memory: True
   load_model: False
   save_model: True
-  model_save_path: ../../data/trained_models/play_noplay/best-model-parameters3.pt
-  model_load_path: ../../data/trained_models/play_noplay/best-model-parameters3.pt
+  model_save_path: ../../data/trained_models/play_noplay/best-model-parameters-eff-b0.pt
+  model_load_path: ../../data/trained_models/play_noplay/best-model-parameters-eff-b0.pt
   input_width: 224
   input_height: 224
   mean: [ 0.485, 0.456, 0.406 ]

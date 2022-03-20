@@ -74,6 +74,15 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft.classifier = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
+    elif model_name == "efficientnet":
+        """ efficientnet
+        """
+        model_ft = models.efficientnet_b0(pretrained=use_pretrained)
+        set_parameter_requires_grad(model_ft, feature_extract)
+        num_ftrs = model_ft.classifier[1].in_features
+        model_ft.classifier = nn.Linear(num_ftrs, num_classes)
+        input_size = 224
+
     elif model_name == "inception":
         """ Inception v3
         Be careful, expects (299,299) sized images and has auxiliary output
