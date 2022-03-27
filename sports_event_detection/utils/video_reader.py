@@ -49,7 +49,8 @@ class VideoReader():
             width = self.__cap.get(3)  # float `width`
             height = self.__cap.get(4)  # float `height`
             self.__frame_shape = (int(height), int(width))
-            print("Video properties: ", self.__frame_shape, self.__fps)
+            print(f"Video properties: {self.__frame_shape} {self.__fps} "
+                  f"{self.__total_frame_count} | Name:  {os.path.basename(self.__filename)}")
         else:
             raise Exception("Video didnt open: {}".format(self.__filename))
 
@@ -63,7 +64,7 @@ class VideoReader():
             logging.info("Nothing to do set, verbose is False")
 
     def get_fps(self) -> int:
-        return int(self.__fps)
+        return self.__fps
 
     def get_total_frame_count(self):
         return self.__total_frame_count
@@ -143,7 +144,7 @@ class VideoReader():
                 print(e)
                 logging.error("Video time string is incorrect: {}".format(video_time_str))
                 sys.exit(1)
-        return frame_no
+        return int(frame_no)
 
     def seek(self, timestamp: int):
         if timestamp < self.__frame_count:

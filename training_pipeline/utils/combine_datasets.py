@@ -7,9 +7,10 @@
 import os
 import shutil
 
-scrum_dataset = "/home/dulanj/MSc/sports-events-detection/data/Rugby-Scrum-V2.v2i.yolov5pytorch"
-lineout_dataset = "/home/dulanj/MSc/sports-events-detection/data/Rugby-Lineout-v2.v2i.yolov5pytorch"
-destination = "/home/dulanj/MSc/sports-events-detection/data/Rugby-Scrum-Lineout-V2.v2i.yolov5pytorch"
+scrum_dataset = "/home/dulanj/MSc/sports-events-detection/training_pipeline/data/Rugby-Scrum-V2.v2i.yolov5pytorch"
+lineout_dataset = "/home/dulanj/MSc/sports-events-detection/training_pipeline/data/Rugby-Lineout-v2.v2i.yolov5pytorch"
+ruck_dataset = "/home/dulanj/MSc/sports-events-detection/training_pipeline/data/Rugby-Ruck.v3i.yolov5pytorch"
+destination = "/home/dulanj/MSc/sports-events-detection/training_pipeline/data/Rugby-Scrum-Lineout-Ruck-V2.v3i.yolov5pytorch"
 
 
 def get_id(dataset_path):
@@ -17,6 +18,8 @@ def get_id(dataset_path):
         return 0
     elif dataset_path == lineout_dataset:
         return 1
+    elif dataset_path == ruck_dataset:
+        return 2
     else:
         raise ValueError("Dataset path is not valid")
 
@@ -26,7 +29,7 @@ def combine_datasets():
         shutil.rmtree(destination)
     os.makedirs(destination)
 
-    for dataset in [scrum_dataset, lineout_dataset]:
+    for dataset in [scrum_dataset, lineout_dataset, ruck_dataset]:
         ds_idx = get_id(dataset)
         for root, dirs, files in os.walk(dataset):
             for dir1 in ["train", "valid", "test"]:

@@ -11,9 +11,7 @@ import string
 import subprocess
 from pathlib import Path
 
-from sports_event_detection.video_reader import VideoReader
-
-logging.getLogger("ffmpeg").setLevel(logging.ERROR)
+from sports_event_detection.utils.video_reader import VideoReader
 
 
 class VideoOperations:
@@ -58,7 +56,7 @@ class VideoOperations:
                   " -c:v libx264 -crf 30 " + self.video_out
 
         logging.info("Execute command: %s", command)
-        subprocess.call(command, shell=True)
+        subprocess.call(command, shell=True, stdout=subprocess.PIPE)
         logging.info("Video Split Successfully from %s to %s", start_second, end_second)
 
         self.set_random_in_out_name()
@@ -73,7 +71,7 @@ class VideoOperations:
             command = "ffmpeg -i " + self.video_in + " -filter:v fps=" + str(fps) + " " + self.video_out
             logging.info("Execute command: %s", command)
 
-            subprocess.call(command, shell=True)
+            subprocess.call(command, shell=True, stdout=subprocess.PIPE)
             logging.info("Video Change FPS Successfully from %s to %s", self.video_info.get_fps(), fps)
         else:
             logging.info("Video FPS is not higher than %s", fps)
@@ -93,14 +91,18 @@ class VideoOperations:
 
 
 if __name__ == '__main__':
+    # for vid in [
+    #     "/home/dulanj/MSc/DialogRugby/Match#3_CR_&_FC_v_Police_SC_DRL_2019_20.mp4",
+    #     "/home/dulanj/MSc/DialogRugby/Match#7_CH_&_FC_v_CR_&_FC_–_DRL_2019_20.mp4"
+    # ]
     logging.basicConfig(level=logging.INFO)
-    video_path = '/home/dulanj/MSc/DialogRugby/Match#1_Navy_SC_vs_Havelock_SC_DRL_2019_20_20fps.mp4'
-    video_operations = VideoOperations(video_path)
-    video_operations.get_video_info()
-    video_operations.split_video("00:40:00", "00:50:00")
+    _video_path = "/home/dulanj/MSc/sports-events-detection/pytests/assets/test_video.mp4"
+    _video_operations = VideoOperations(_video_path)
+    _video_operations.get_video_info()
+    # video_operations.split_video("00:40:00", "00:50:00")
     # video_operations.split_video_frames(100, 500)
-    video_operations.change_fps(5)
-    video_operations.save("/home/dulanj/MSc/DialogRugby/short_clips/match_1_short_clip.mp4")
+    _video_operations.change_fps(20)
+    _video_operations.save("/home/dulanj/MSc/sports-events-detection/pytests/assets/test_video_20.mp4")
 
     # video_info = VideoReader("/home/dulanj/MSc/DialogRugby/10fps/match2.mp4")
     # print(video_info.get_fps())

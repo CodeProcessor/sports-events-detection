@@ -12,7 +12,7 @@ from pretrained_models import initialize_model
 
 def test():
     # model = ClassificationModel(num_classes=configs["data"]["no_of_classes"]).to(DEVICE)
-    model_name = "resnet"
+    model_name = "efficientnet"
     num_classes = 2
     feature_extract = False
     model, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=False)
@@ -41,7 +41,7 @@ def test():
             correct += sum(predicted == labels)
             print("Accuracy: ", 100 * correct / total)
 
-    print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
+    print('Accuracy of the network on the {} test images: {}%'.format(total, 100 * correct / total))
 
     # for x, y in test_loader:
     #

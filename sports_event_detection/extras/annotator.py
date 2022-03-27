@@ -7,9 +7,9 @@ import os
 
 import cv2
 
-from sports_event_detection.data_file import DataFile
-from sports_event_detection.video_reader import VideoReader
-from sports_event_detection.video_writer import SEDVideoWriter
+from sports_event_detection.extras.data_file import DataFile
+from sports_event_detection.utils.video_reader import VideoReader
+from sports_event_detection.utils.video_writer import SEDVideoWriter
 
 
 class Annotate:

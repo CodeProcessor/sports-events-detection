@@ -11,7 +11,7 @@ import sys
 
 import cv2
 
-from sports_event_detection.common import EventTypes
+from sports_event_detection.extras.common import EventTypes
 
 
 class ExtractTypes(enum.Enum):
@@ -23,7 +23,7 @@ clip_type_to_freq = {
     EventTypes.lineout.name: 5,
     EventTypes.scrum.name: 10,
     EventTypes.kick.name: 3,
-    EventTypes.ruck.name: 15,
+    EventTypes.ruck.name: 25,
     EventTypes.play.name: 15,
     EventTypes.noplay.name: 15,
     EventTypes.other.name: 15,
@@ -114,8 +114,8 @@ class Clips:
 
 
 if __name__ == '__main__':
-    path_to_clips = "../clip-extract-tool/data/clips_1m_ruck"
-    destination = "data/rucks_v1"
+    path_to_clips = "../step1_video_clip_extraction/data/clips_20m_ruck"
+    destination = "data/rucks_v2_20m"
     _type = ExtractTypes.auto
     event_list = [
         # EventTypes.lineout,

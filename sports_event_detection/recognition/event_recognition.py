@@ -5,35 +5,23 @@
 @Time:        24/01/2022 20:13
 """
 import os
-import time
 from collections import deque
 
 import pandas as pd
 from tqdm import tqdm
 
-from sports_event_detection.storage import Storage
-from sports_event_detection.video_reader import VideoReader
-from sports_event_detection.video_writer import SEDVideoWriter
+from sports_event_detection.recognition.recognition import Recognition
 
 
-class SportsEventsRecognition:
+class SportsEventsRecognition(Recognition):
     def __init__(self, video_path, db_name, classes, save_clip=False):
-        self.model = None
-        self.video = VideoReader(video_path)
-        self.storage = Storage(db_name)
         self.classes = classes
         self.class_reverse = {v: k for k, v in self.classes.items()}
-        self.window_size = int(1 * self.video.get_fps())
-        self.event_name = None
-        print("Video path: {}\n"
-              "DB path: {}\n"
-              "Total frames: {}".format(video_path, db_name, self.video.get_total_frame_count()))
-        self.save_clip = save_clip
-        time.sleep(2)
+        super().__init__(video_path, db_name, save_clip)
 
     def is_correct_event(self, event, event_name):
         ret = False
-        if event_name in ["scrum", "lineout"]:
+        if event_name in ["scrum", "line_out", "ruck"]:
             _is_same_event = int(event[-1]) == self.class_reverse[event_name]
             if _is_same_event:
                 # print(event)
@@ -73,14 +61,6 @@ class SportsEventsRecognition:
                     print(ke)
                     print("KeyError: frame id - {} data - {}".format(data["frame_id"], data))
         return _classes_count / len(queue)
-
-    def frame_to_time(self, frame_id):
-        seconds = frame_id / self.video.get_fps()
-        minutes = seconds // 60
-        hours = minutes // 60
-        seconds = seconds % 60
-        minutes = minutes % 60
-        return "{:02d}:{:02d}:{:02d}".format(int(hours), int(minutes), int(seconds))
 
     def find_event(self, mod_eve_list, skip_time="00:00:00", break_on_time=None, return_json=True):
         queue = deque(maxlen=self.window_size)
@@ -200,29 +180,13 @@ class SportsEventsRecognition:
         print("Total {} Events: {}".format(self.event_name, _no_of_events))
         return _event_dataframe
 
-    def clip_event(self, dir_name, clip_name, from_frame_id, to_frame_id):
-        video_dir_path = os.path.join("event_clips", self.video.get_video_name(), dir_name)
-        video_writer = SEDVideoWriter(clip_name, self.video.get_fps(), video_dir_path)
-        self.video.seek(from_frame_id)
-        for _ in range(from_frame_id, to_frame_id):
-            frame = self.video.read_frame()
-            if frame is not None:
-                video_writer.write(frame)
-        video_writer.clean()
-        print("Clip {} created from {} to {} and saved to {}".format(
-            clip_name,
-            self.frame_to_time(from_frame_id),
-            self.frame_to_time(to_frame_id),
-            os.path.join(video_dir_path, clip_name))
-        )
-
 
 if __name__ == '__main__':
-    video_path = '/home/dulanj/MSc/DialogRugby/out-s-20_30-e-40_00-match-16.mp4'
-    db_name = os.path.basename(video_path).split('.')[0] + '.db'
-    classes = {
+    _video_path = '/home/dulanj/MSc/DialogRugby/out-s-20_30-e-40_00-match-16.mp4'
+    _db_name = os.path.basename(_video_path).split('.')[0] + '.db'
+    _classes = {
         0: 'scrum',
         1: 'line_out'
     }
-    ef = SportsEventsRecognition(video_path, db_name, classes)
+    ef = SportsEventsRecognition(_video_path, _db_name, _classes)
     ef.find_event('scrum')

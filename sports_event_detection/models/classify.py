@@ -10,7 +10,7 @@ from torch.nn.functional import softmax
 from torchvision import transforms
 from torchvision.transforms import Compose
 
-from sports_event_detection.pretrained_models import initialize_model
+from sports_event_detection.models.pretrained_models import initialize_model
 
 
 class Pred:

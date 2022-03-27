@@ -6,9 +6,9 @@
 """
 import os
 
-from sports_event_detection.common import ModelNames
-from sports_event_detection.event_detection import SportsEventsDetection
-from sports_event_detection.play_detection import PlayDetection
+from sports_event_detection.detection.event_detection import SportsEventsDetection
+from sports_event_detection.detection.play_detection import PlayDetection
+from sports_event_detection.extras.common import ModelNames
 
 
 def get_digital(video_path, skip_time="00:00:00", break_on_time=None):
@@ -29,7 +29,7 @@ def get_scrum_linout(video_path, skip_time="00:00:00", break_on_time=None):
         0: 'scrum',
         1: 'line_out'
     }
-    model_name = ModelNames.scrum_lineout_object_detection_model.name
+    model_name = ModelNames.sport_events_object_detection_model.name
     sed = SportsEventsDetection(video_path, db_name, weight_path, classes, model_name)
     sed.video_loop(skip_time, break_on_time)
 

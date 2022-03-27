@@ -4,7 +4,6 @@
 @Author:      dulanj
 @Time:        23/01/2022 12:12
 """
-import cv2
 import numpy as np
 import torch
 from models.common import DetectMultiBackend
@@ -104,18 +103,3 @@ class YoloModel:
         :return: xyxy, conf, class
         """
         return self._post_process(self._inference(self.pre_process(image)))
-
-
-if __name__ == '__main__':
-    image = cv2.imread(
-        "/home/dulanj/MSc/sports-events-detection/data/Rugby-Scrum.v1i.yolov5pytorch/test/images/scrum_57_jpg.rf.e62bd2761bbfefb5038e6cf4fd516e6c.jpg")
-    model_file_path = "/home/dulanj/MSc/yolov5/runs/train/exp5/weights/best.pt"
-    model = YoloModel(model_file_path)
-    ret = model.predict(image)
-    print(ret)
-    h, w = image.shape[:2]
-    for det in ret:
-        print(det)
-        cv2.rectangle(image, (int(det[0] * w), int(det[1] * h)), (int(det[2] * w), int(det[3] * h)), (0, 255, 0), 2)
-    cv2.imshow("image", image)
-    cv2.waitKey(0)

@@ -9,7 +9,7 @@ import os
 
 import cv2
 
-from sports_event_detection.video_reader import VideoReader
+from sports_event_detection.utils.video_reader import VideoReader
 
 
 def extract_images(video_path, output_dir, every_n_second=1.0):

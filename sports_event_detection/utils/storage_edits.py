@@ -4,8 +4,8 @@
 @Author:      dulanj
 @Time:        27/01/2022 22:20
 """
-from sports_event_detection.common import ModelNames
-from sports_event_detection.storage import Storage
+from sports_event_detection.extras.common import ModelNames
+from sports_event_detection.utils.storage import Storage
 
 if __name__ == '__main__':
     storage = Storage('data_storage/Match#16_CR_&_FC_v_Army_SC_DRL_2019_20_play_n.db')

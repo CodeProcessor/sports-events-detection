@@ -7,7 +7,7 @@ import enum
 
 import pandas as pd
 
-from sports_event_detection.common import EventTypes
+from sports_event_detection.extras.common import EventTypes
 
 
 class RowData:

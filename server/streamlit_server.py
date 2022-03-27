@@ -14,6 +14,8 @@ if 'dataframe' not in st.session_state:
     st.session_state['dataframe'] = None
 if 'time_frame' not in st.session_state:
     st.session_state['time_frame'] = (0, 60)
+if 'start_time' not in st.session_state:
+    st.session_state['start_time'] = 0
 
 sports_event_detection_backend = SportEventDetectionBackend(return_json=False)
 
@@ -49,9 +51,6 @@ except Exception as e:
     enable = False
     url = "Not a valid url"
 
-if enable:
-    st.video(url, start_time=0)
-
 st.write('URL : {}'.format(url))
 _length = int(info['length'])
 st.write('{:10} : {}'.format("Title", info['title']))
@@ -63,9 +62,13 @@ st.write('{} : {} | {} : {} | {} : {} seconds'.format(
 
 values = st.slider('Select video range seconds scale', 0, _length, (0, _length), disabled=not enable)
 _start_sec, _end_sec = values
+st.session_state['start_time'] = _start_sec
 _skip_time = get_video_time(_start_sec)
 _break_on_time = get_video_time(_end_sec)
 st.write(f'Video selected from **{_skip_time}** to **{_break_on_time}**')
+
+if enable:
+    st.video(url, start_time=st.session_state['start_time'])
 
 
 @st.cache
@@ -74,6 +77,7 @@ def process_video(url, skip_time, break_on_time):
     if len(dataframe.index) > 0:
         dataframe.drop(columns=['start_frame_id', 'end_frame_id'], inplace=True)
         dataframe.sort_values(by=['start_time'], inplace=True)
+        dataframe.reset_index(drop=True, inplace=True)
     return dataframe
 
 
@@ -98,3 +102,7 @@ if st.session_state['process_button']:
             st.write('No events found')
     else:
         st.write('Video is not processed')
+
+_ = [st.write('') for _ in range(10)]
+st.write('https://github.com/CodeProcessor/sports-events-detection')
+st.write('Copyright © 2022 Dulan Jayasuriya. All rights reserved.')
