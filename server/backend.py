@@ -9,6 +9,8 @@ import json
 import os
 from datetime import datetime
 
+from pandas import DataFrame
+
 from sports_event_detection.detection.event_detection import SportsEventsDetection
 from sports_event_detection.detection.play_detection import PlayDetection
 from sports_event_detection.extras.common import ModelNames
@@ -153,7 +155,7 @@ class SportEventDetectionBackend:
         _full_path = self.download_video(video_url)
         if _full_path is not None:
             _converted_path = self.convert_video(_full_path)
-            # self.detect_sport_events(_converted_path, skip_time, break_on_time)
+            self.detect_sport_events(_converted_path, skip_time, break_on_time)
             event_lists = self.recognize_sport_event(_converted_path, skip_time, break_on_time)
         return {
             'video_url': video_url,
@@ -167,7 +169,10 @@ if __name__ == '__main__':
     output_type_json = False
     backend = SportEventDetectionBackend(return_json=output_type_json)
     video_url_list = [
-        "https://www.youtube.com/watch?v=hwn3NpEwBfk"
+        "https://www.youtube.com/watch?v=x4rvFbkcox4",
+        # "https://www.youtube.com/watch?v=zd_a5PHi12g"
+
+        # "https://www.youtube.com/watch?v=hwn3NpEwBfk"
         # "https://www.youtube.com/watch?v=HGPhsSsZE7E",
         # "https://www.youtube.com/watch?v=hwn3NpEwBfk",
         # "https://www.youtube.com/watch?v=DhdYasfUcds",
@@ -197,7 +202,11 @@ if __name__ == '__main__':
         if output_type_json:
             print(json.dumps(ret, indent=4))
         else:
-            print(ret.head())
+            data: DataFrame = ret
+            print(data.head())
+            data.replace("line_out", "lineout", inplace=True)
+            data.to_csv("{}.csv".format(_video_url.split("=")[1]), index=False)
+
         # print(json.dumps(ret, indent=4, sort_keys=True))
 
     # backend.process("https://www.youtube.com/watch?v=HGPhsSsZE7E")
