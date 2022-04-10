@@ -6,11 +6,7 @@
 """
 import pandas as pd
 
-from sports_event_detection.extras.sports_utils import check_overlap, remove_noplay_overlapped_events
-
-prediction_file = "/home/dulanj/MSc/sports-events-detection/server/x4rvFbkcox4.csv"
-# prediction_file = "/home/dulanj/MSc/sports-events-detection/sports_event_detection/recognition/Army_SC_v_Kandy_SC_–_DRL_2019_20_#38.csv"
-ground_truth_file = "/home/dulanj/Learn/rugby-events-dataset/video-annotations/match_csv_files/match#38.csv"
+from sports_event_detection.extras.sports_utils import check_overlap
 
 
 def load_df(gt_file, pred_file):
@@ -43,46 +39,39 @@ def get_overall_accuracy(df_pd, df_gt, event_name):
     # print(ground_truth_df.head())
     # print(prediction_df.head())
 
-    get_gt = get_next_row(ground_truth_df)
-    get_pd = get_next_row(prediction_df)
-    row_gt = get_gt.__next__()
-    row_pd = get_pd.__next__()
-    try:
-        while row_gt is not None and row_pd is not None:
+    # Generator comprehension
+    get_gt = (row for _, row in ground_truth_df.iterrows())
+    get_pd = (row for _, row in prediction_df.iterrows())
+
+    row_gt = next(get_gt)
+    row_pd = next(get_pd)
+
+    while row_gt is not None and row_pd is not None:
+        try:
             overlap, value = check_overlap(row_gt, row_pd)
             if overlap:
                 conf_matrix['TP'] += 1
-                assert value > 0
+                assert value >= 0, print(row_gt)
                 iou.append(value)
-                row_gt = get_gt.__next__()
-                row_pd = get_pd.__next__()
+                row_gt = next(get_gt)
+                row_pd = next(get_pd)
             else:
                 if value > 0:
                     conf_matrix['FN'] += 1
-                    row_gt = get_gt.__next__()
+                    row_gt = next(get_gt)
                 else:
                     conf_matrix['FP'] += 1
-                    row_pd = get_pd.__next__()
-    except StopIteration:
-        pass
+                    row_pd = next(get_pd)
+        except StopIteration:
+            break
 
     print(conf_matrix)
-    print(iou)
-    print("IOU: {}".format(sum(iou) / len(iou)))
-    print("Accuracy: {}".format(conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FP'] + conf_matrix['FN'])))
-    print("Precision: {}".format(conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FP'])))
-    print("Recall: {}".format(conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FN'])))
-    print("F1: {}".format(2 * conf_matrix['TP'] / (2 * conf_matrix['TP'] + conf_matrix['FP'] + conf_matrix['FN'])))
+    # print(iou)
+    _iou_avg = sum(iou) / len(iou)
+    _acc = conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FP'] + conf_matrix['FN'])
+    _precision = conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FP'])
+    _recall = conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FN'])
+    _f1 = 2 * _precision * _recall / (_precision + _recall)
+    print(
+        f"IOU: {_iou_avg:.2f} \tAccuracy: {_acc:.2f} \tPrecision: {_precision:.2f} \tRecall: {_recall:.2f} \tF1: {_f1:.2f}")
     return conf_matrix
-
-
-if __name__ == '__main__':
-    df_pd, df_gt = load_df(ground_truth_file, prediction_file)
-    df_pd = remove_noplay_overlapped_events(df_pd)
-    # print(df_pd.head())
-    # print(df_gt.head())
-    for _event in ['scrum', 'lineout', 'ruck']:
-        print("=" * 20)
-        print("Event: {}".format(_event))
-        get_overall_accuracy(df_pd, df_gt, _event)
-    # print(convert_to_seconds('1.10.5'))

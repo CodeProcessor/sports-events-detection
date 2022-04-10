@@ -64,7 +64,7 @@ def check_overlap(series_a, series_b, verbose=False):
 
     _overlap = False
     _value = 0
-    if max(a_start_second, b_start_second) - min(a_end_second, b_end_second) <= 0:
+    if max(a_start_second, b_start_second) - min(a_end_second, b_end_second) < 0:
         _value = (min(a_end_second, b_end_second) - max(a_start_second, b_start_second)) * 1.0 \
                  / (max(a_end_second, b_end_second) - min(a_start_second, b_start_second))
         _overlap = True
@@ -91,7 +91,7 @@ def remove_noplay_overlapped_events(prediction_df):
             if _overlap:
                 try:
                     prediction_df.drop(index2, inplace=True, axis=0)
-                    print("Dropped index {}".format(index2))
+                    print("Index dropped {}".format(index2))
                     # print("No play \n{}".format(row))
                     # print("Dropped \n{}".format(row_event))
                     # print("=" * 50)

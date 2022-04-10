@@ -137,6 +137,7 @@ class VideoReader():
             frame_no = self.__frame_count
         else:
             try:
+                video_time_str = video_time_str.replace(".", ":")
                 _hh, _mm, _ss = video_time_str.split(":")
                 seconds = int(_hh) * 3600 + int(_mm) * 60 + int(_ss)
                 frame_no = seconds * self.get_fps()
