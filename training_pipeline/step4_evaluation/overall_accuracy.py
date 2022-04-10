@@ -6,49 +6,19 @@
 """
 import pandas as pd
 
-from sports_event_detection.extras.sports_utils import convert_string_time_to_seconds
+from sports_event_detection.extras.sports_utils import check_overlap, remove_noplay_overlapped_events
 
 prediction_file = "/home/dulanj/MSc/sports-events-detection/server/x4rvFbkcox4.csv"
+# prediction_file = "/home/dulanj/MSc/sports-events-detection/sports_event_detection/recognition/Army_SC_v_Kandy_SC_–_DRL_2019_20_#38.csv"
 ground_truth_file = "/home/dulanj/Learn/rugby-events-dataset/video-annotations/match_csv_files/match#38.csv"
 
 
 def load_df(gt_file, pred_file):
     df_pd = pd.read_csv(pred_file)
     df_pd.drop(columns=['start_frame_id', 'end_frame_id', 'duration'], inplace=True)
+
     df_gt = pd.read_csv(gt_file, names=["event_name", "start_time", "end_time"])
     return df_pd, df_gt
-
-
-def convert_to_seconds(time_str):
-    return convert_string_time_to_seconds(time_str)
-
-
-def check_overlap(series_a, series_b, verbose=False):
-    a_start_second = convert_to_seconds(series_a['start_time'])
-    a_end_second = convert_to_seconds(series_a['end_time'])
-
-    b_start_second = convert_to_seconds(series_b['start_time'])
-    b_end_second = convert_to_seconds(series_b['end_time'])
-
-    _overlap = False
-    _value = 0
-    if (a_start_second - b_start_second) * (a_start_second - b_end_second) < 0 or (a_end_second - b_start_second) * (
-            a_end_second - b_end_second) < 0:
-        _value = (min(a_end_second, b_end_second) - max(a_start_second, b_start_second)) * 1.0 \
-                 / (max(a_end_second, b_end_second) - min(a_start_second, b_start_second))
-        _overlap = True
-    else:
-        _value = b_start_second - a_start_second if a_start_second < b_start_second else b_end_second - a_start_second
-
-    print("{} - {} | {} - {} | {} {} ".format(
-        series_a['start_time'],
-        series_a['end_time'],
-        series_b['start_time'],
-        series_b['end_time'],
-        _overlap,
-        _value)
-    ) if verbose else ""
-    return _overlap, _value
 
 
 def get_next_row(dataframe):
@@ -82,6 +52,7 @@ def get_overall_accuracy(df_pd, df_gt, event_name):
             overlap, value = check_overlap(row_gt, row_pd)
             if overlap:
                 conf_matrix['TP'] += 1
+                assert value > 0
                 iou.append(value)
                 row_gt = get_gt.__next__()
                 row_pd = get_pd.__next__()
@@ -96,7 +67,7 @@ def get_overall_accuracy(df_pd, df_gt, event_name):
         pass
 
     print(conf_matrix)
-    # print(iou)
+    print(iou)
     print("IOU: {}".format(sum(iou) / len(iou)))
     print("Accuracy: {}".format(conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FP'] + conf_matrix['FN'])))
     print("Precision: {}".format(conf_matrix['TP'] / (conf_matrix['TP'] + conf_matrix['FP'])))
@@ -107,6 +78,7 @@ def get_overall_accuracy(df_pd, df_gt, event_name):
 
 if __name__ == '__main__':
     df_pd, df_gt = load_df(ground_truth_file, prediction_file)
+    df_pd = remove_noplay_overlapped_events(df_pd)
     # print(df_pd.head())
     # print(df_gt.head())
     for _event in ['scrum', 'lineout', 'ruck']:
