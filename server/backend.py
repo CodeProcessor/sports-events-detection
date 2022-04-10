@@ -20,8 +20,7 @@ from sports_event_detection.utils.youtube_downloader import YouTubeDownloader
 
 
 class SportEventDetectionBackend:
-    def __init__(self, return_json=True, save_clips=False):
-        self.return_json = return_json
+    def __init__(self, save_clips=False):
         self.save_clips = save_clips
         self._fps = 5
         self.prediction_override = {
@@ -103,8 +102,7 @@ class SportEventDetectionBackend:
         _noplay_event_summary_dict = ef.find_event(
             mod_eve_list,
             skip_time,
-            break_on_time,
-            self.return_json
+            break_on_time
         )
         return [_noplay_event_summary_dict] if isinstance(_noplay_event_summary_dict, dict) else \
             _noplay_event_summary_dict
@@ -120,20 +118,17 @@ class SportEventDetectionBackend:
         _scrum_event_summary_dict = ef.find_event(
             [(ModelNames.sport_events_object_detection_model.name, 'scrum')],
             skip_time,
-            break_on_time,
-            self.return_json
+            break_on_time
         )
         _line_out_event_summary_dict = ef.find_event(
             [(ModelNames.sport_events_object_detection_model.name, 'line_out')],
             skip_time,
-            break_on_time,
-            self.return_json
+            break_on_time
         )
         _ruck_event_summary_dict = ef.find_event(
             [(ModelNames.sport_events_object_detection_model.name, 'ruck')],
             skip_time,
-            break_on_time,
-            self.return_json
+            break_on_time
         )
         return [_scrum_event_summary_dict, _line_out_event_summary_dict, _ruck_event_summary_dict] if \
             isinstance(_scrum_event_summary_dict, dict) \
@@ -167,7 +162,7 @@ class SportEventDetectionBackend:
 
 if __name__ == '__main__':
     output_type_json = False
-    backend = SportEventDetectionBackend(return_json=output_type_json)
+    backend = SportEventDetectionBackend()
     video_url_list = [
         "https://www.youtube.com/watch?v=x4rvFbkcox4",
         # "https://www.youtube.com/watch?v=zd_a5PHi12g"
@@ -205,6 +200,7 @@ if __name__ == '__main__':
             data: DataFrame = ret
             print(data.head())
             data.replace("line_out", "lineout", inplace=True)
+            data.sort_values(by=['start_frame_id'], inplace=True)
             data.to_csv("{}.csv".format(_video_url.split("=")[1]), index=False)
 
         # print(json.dumps(ret, indent=4, sort_keys=True))

@@ -62,7 +62,7 @@ class SportsEventsRecognition(Recognition):
                     print("KeyError: frame id - {} data - {}".format(data["frame_id"], data))
         return _classes_count / len(queue)
 
-    def find_event(self, mod_eve_list, skip_time="00:00:00", break_on_time=None, return_json=True):
+    def find_event(self, mod_eve_list, skip_time="00:00:00", break_on_time=None):
         queue = deque(maxlen=self.window_size)
         self.event_name = "_".join([event_name for _, event_name in mod_eve_list])
         start_frame = self.video.get_frame_no(skip_time)
@@ -90,7 +90,7 @@ class SportsEventsRecognition(Recognition):
             if data is None:
                 print(len(queue))
                 break
-        return self.event_summary(event_frame_data) if return_json else self.event_summary_df(event_frame_data)
+        return self.event_summary_df(event_frame_data)
 
     def event_summary(self, event_frame_data):
         _events = []
