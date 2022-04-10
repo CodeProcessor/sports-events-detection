@@ -17,6 +17,7 @@ from sports_event_detection.utils.video_writer import SEDVideoWriter
 
 class TrackRecognition(Recognition):
     def __init__(self, video_path, db_name, output_path=None):
+        print("[INFO] Initializing TrackRecognition...")
         super().__init__(video_path, db_name)
         self.track_scrum = Tracking("scrum", max_disappeared=5, min_update_count=15, min_lifespan=40)
         self.track_lineout = Tracking("lineout", max_disappeared=5, min_update_count=20, min_lifespan=40)
@@ -78,16 +79,18 @@ class TrackRecognition(Recognition):
         dataframe["duration"] = duration
         return dataframe
 
-    def recognize(self, visualize=False):
-        self.video.seek(self.frame_count)
-        frame = self.video.read_frame()
-        total_frame_count = self.video.get_total_frame_count()
-        [tr.set_frame_count(self.frame_count) for tr in [self.track_scrum, self.track_lineout, self.track_ruck]]
-        while frame is not None:
-            self.frame_count += 1
-            if self.frame_count > total_frame_count:
-                break
-            data = self.storage.get_data(self.frame_count)
+    def recognize(self, skip_time="00:00:00", break_on_time=None, visualize=False):
+        start_frame = self.video.get_frame_no(skip_time)
+        end_frame = self.video.get_total_frame_count() if break_on_time is None else \
+            self.video.get_frame_no(break_on_time)
+        duration = end_frame - start_frame
+        self.video.set_progress_bar_limit(duration)
+        self.video.seek(start_frame)
+
+        [tr.set_frame_count(start_frame) for tr in [self.track_scrum, self.track_lineout, self.track_ruck]]
+        for frame_id in range(start_frame, end_frame):
+            frame = self.video.read_frame()
+            data = self.storage.get_data(frame_id)
             if data is None:
                 continue
             events = data["data"][ModelNames.sport_events_object_detection_model.name]
@@ -122,10 +125,6 @@ class TrackRecognition(Recognition):
                 if self.video_writer is not None:
                     self.video_writer.write(frame)
 
-            frame = self.video.read_frame()
-            # if self.frame_count > 15000:
-            #     break
-
         cv2.destroyAllWindows()
         if self.video_writer is not None:
             self.video_writer.clean()
@@ -133,8 +132,6 @@ class TrackRecognition(Recognition):
         lineout_df = self.track_lineout.events_dataframe
         ruck_df = self.track_ruck.events_dataframe
         concat_df = pd.concat([ruck_df, scrum_df, lineout_df], ignore_index=True)
-        print(concat_df.head())
         concat_df = self.create_structured_df(concat_df)
-        print(concat_df)
 
         return concat_df
