@@ -28,15 +28,11 @@ class YoloModel:
 
     def load_yolo(self, model_path):
         """
-
         :param model_path:
         :return:
         """
-
         dnn = False
-        data = "/home/dulanj/MSc/yolov5/sed-scrum-lineout.yaml"
-
-        model = DetectMultiBackend([model_path], device=self.device, dnn=dnn, data=data)
+        model = DetectMultiBackend([model_path], device=self.device, dnn=dnn)
         return model
 
     def pre_process(self, image):
