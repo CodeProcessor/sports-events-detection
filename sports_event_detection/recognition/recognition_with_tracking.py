@@ -114,7 +114,7 @@ class TrackRecognition(Recognition):
                       f" Line-out: {self.track_lineout.get_event_counts()}" \
                       f" Ruck: {self.track_ruck.get_event_counts()}"
                 cv2.putText(frame, txt, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                if visualize or self.video_writer is not None:
+                if visualize:
                     cv2.imshow("frame", frame)
                     c = cv2.waitKey(1)
                     if c == 27:
