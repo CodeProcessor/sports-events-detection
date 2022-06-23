@@ -1,0 +1,7 @@
+version: "3.3"
+services:
+  sed:
+    build: .
+    image: sed:latest
+    ports:
+      - "8000:5000"

@@ -1,0 +1,14 @@
+./pytests
+./training_pipeline
+./sports_event_Detection
+./server
+
+# Remove images
+*.jpg
+*.png
+
+# Remove all videos
+*.mkv
+*.mp4
+
+*.db

@@ -17,7 +17,7 @@ if 'time_frame' not in st.session_state:
 if 'start_time' not in st.session_state:
     st.session_state['start_time'] = 0
 
-sports_event_detection_backend = SportEventDetectionBackend(return_json=False)
+sports_event_detection_backend = SportEventDetectionBackend()
 
 st.title('Sports Video Event Analysis System')
 

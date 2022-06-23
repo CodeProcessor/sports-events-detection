@@ -5,21 +5,22 @@
 @Time:        04/02/2022 13:53
 """
 import hashlib
-import json
 import os
-from datetime import datetime
+
+import pandas as pd
+from pandas import DataFrame
 
 from sports_event_detection.detection.event_detection import SportsEventsDetection
 from sports_event_detection.detection.play_detection import PlayDetection
 from sports_event_detection.extras.common import ModelNames
 from sports_event_detection.recognition.event_recognition import SportsEventsRecognition
+from sports_event_detection.recognition.recognition_with_tracking import TrackRecognition
 from sports_event_detection.utils.video_operations import VideoOperations
 from sports_event_detection.utils.youtube_downloader import YouTubeDownloader
 
 
 class SportEventDetectionBackend:
-    def __init__(self, return_json=True, save_clips=False):
-        self.return_json = return_json
+    def __init__(self, save_clips=False):
         self.save_clips = save_clips
         self._fps = 5
         self.prediction_override = {
@@ -62,7 +63,7 @@ class SportEventDetectionBackend:
 
     def get_digital(self, video_path, skip_time, break_on_time):
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
-        weight_path = 'models/digital_v3.pt'
+        weight_path = 'trained_models/digital_v3.pt'
         classes = {
             0: 'digital'
         }
@@ -72,7 +73,7 @@ class SportEventDetectionBackend:
 
     def get_scrum_linout(self, video_path, skip_time, break_on_time):
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
-        weight_path = 'models/events_v3.pt'
+        weight_path = 'trained_models/events_v3.pt'
         classes = {
             0: 'scrum',
             1: 'line_out',
@@ -83,7 +84,7 @@ class SportEventDetectionBackend:
         sed.video_loop(skip_time, break_on_time, overwrite=self.prediction_override['events'])
 
     def play_detection(self, video_path, skip_time, break_on_time):
-        model_path = "models/activity_v3.pt"
+        model_path = "trained_models/activity_v3.pt"
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
         pd_obj = PlayDetection(video_path, db_name, model_path)
         pd_obj.video_loop(skip_time, break_on_time)
@@ -101,13 +102,19 @@ class SportEventDetectionBackend:
         _noplay_event_summary_dict = ef.find_event(
             mod_eve_list,
             skip_time,
-            break_on_time,
-            self.return_json
+            break_on_time
         )
         return [_noplay_event_summary_dict] if isinstance(_noplay_event_summary_dict, dict) else \
             _noplay_event_summary_dict
 
-    def scrum_lineout_recognition(self, video_path, skip_time, break_on_time):
+    def event_recognition(self, video_path, skip_time, break_on_time):
+        """
+        Event tracking with moving average
+        :param video_path: Path to the video
+        :param skip_time: Start time of the video to be skipped hh:mm:ss
+        :param break_on_time: End time of the video to be skipped hh:mm:ss
+        :return: Dataframe
+        """
         db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
         classes = {
             0: 'scrum',
@@ -118,86 +125,61 @@ class SportEventDetectionBackend:
         _scrum_event_summary_dict = ef.find_event(
             [(ModelNames.sport_events_object_detection_model.name, 'scrum')],
             skip_time,
-            break_on_time,
-            self.return_json
+            break_on_time
         )
         _line_out_event_summary_dict = ef.find_event(
             [(ModelNames.sport_events_object_detection_model.name, 'line_out')],
             skip_time,
-            break_on_time,
-            self.return_json
+            break_on_time
         )
         _ruck_event_summary_dict = ef.find_event(
             [(ModelNames.sport_events_object_detection_model.name, 'ruck')],
             skip_time,
-            break_on_time,
-            self.return_json
+            break_on_time
         )
         return [_scrum_event_summary_dict, _line_out_event_summary_dict, _ruck_event_summary_dict] if \
             isinstance(_scrum_event_summary_dict, dict) \
             else _scrum_event_summary_dict.append(_line_out_event_summary_dict).append(_ruck_event_summary_dict)
 
+    def event_recognition_with_tracking(self, video_path, skip_time, break_on_time):
+        """
+        Event tracking with bounding box tracking algorithm
+        :param video_path: Path to the video
+        :param skip_time: Start time of the video to be skipped hh:mm:ss
+        :param break_on_time: End time of the video to be skipped hh:mm:ss
+        :return: Dataframe
+        """
+        db_name = os.path.join("data_storage", os.path.basename(video_path).split('.')[0] + '.db')
+        tr = TrackRecognition(video_path, db_name)
+        dataframe = tr.recognize(skip_time=skip_time, break_on_time=break_on_time, visualize=False)
+        return dataframe
+
     def detect_sport_events(self, video_path, skip_time, break_on_time):
+        """
+        Predict on all the sports events
+        :param video_path:
+        :param skip_time:
+        :param break_on_time:
+        :return:
+        """
         self.get_digital(video_path, skip_time, break_on_time)
         self.get_scrum_linout(video_path, skip_time, break_on_time)
         self.play_detection(video_path, skip_time, break_on_time)
 
     def recognize_sport_event(self, video_path, skip_time, break_on_time):
-        _event_list_1 = self.scrum_lineout_recognition(video_path, skip_time, break_on_time)
-        _event_list_2 = self.play_recognition(video_path, skip_time, break_on_time)
-        return _event_list_1 + _event_list_2 if isinstance(_event_list_1, list) else _event_list_1.append(_event_list_2)
+        # _event_list_1 = self.event_recognition(video_path, skip_time, break_on_time)
+        _event_df_1 = self.event_recognition_with_tracking(video_path, skip_time, break_on_time)
+        _event_df_2 = self.play_recognition(video_path, skip_time, break_on_time)
+        return _event_df_1.append(_event_df_2)
 
     def process_video(self, video_url, skip_time, break_on_time):
-        event_lists = []
+        data: DataFrame = pd.DataFrame()
         _converted_path = ""
         _full_path = self.download_video(video_url)
         if _full_path is not None:
             _converted_path = self.convert_video(_full_path)
-            # self.detect_sport_events(_converted_path, skip_time, break_on_time)
-            event_lists = self.recognize_sport_event(_converted_path, skip_time, break_on_time)
-        return {
-            'video_url': video_url,
-            'video_download_path': _full_path,
-            'converted_path': _converted_path,
-            'event_lists': event_lists
-        } if isinstance(event_lists, list) else event_lists
-
-
-if __name__ == '__main__':
-    output_type_json = False
-    backend = SportEventDetectionBackend(return_json=output_type_json)
-    video_url_list = [
-        "https://www.youtube.com/watch?v=hwn3NpEwBfk"
-        # "https://www.youtube.com/watch?v=HGPhsSsZE7E",
-        # "https://www.youtube.com/watch?v=hwn3NpEwBfk",
-        # "https://www.youtube.com/watch?v=DhdYasfUcds",
-        # "https://www.youtube.com/watch?v=2w1dwDE57jw",
-        # "https://www.youtube.com/watch?v=WnrOpvy0U_w",
-        # "https://www.youtube.com/watch?v=KMcrbMoJ2Mk"
-        # "https://www.youtube.com/watch?v=ab--JFZNxMM",
-        # "https://www.youtube.com/watch?v=ObFxcZtUkCg",
-        # "https://www.youtube.com/watch?v=ol_0V671OQ8",
-        # "https://www.youtube.com/watch?v=3qcArzTl5sk",
-        # "https://www.youtube.com/watch?v=yx1ORXAIhNA",
-        # "https://www.youtube.com/watch?v=hMjiUFExsRs",
-        # "https://www.youtube.com/watch?v=Q51uDv1YzuU",
-        # "https://www.youtube.com/watch?v=OLtz28d0OCI",
-        # "https://www.youtube.com/watch?v=3iVlBS-vZuY",
-        # "https://www.youtube.com/watch?v=VzGdHEcqcNM",
-        # "https://www.youtube.com/watch?v=a-rhpeAcNpY",
-        # "https://www.youtube.com/watch?v=2vGH7TzYw6k",
-        # "https://www.youtube.com/watch?v=x4rvFbkcox4",
-        # "https://www.youtube.com/watch?v=rCc9CxdLTrA",
-        # "https://www.youtube.com/watch?v=PeixkhanS_M"
-    ]
-    for _video_url in video_url_list:
-        ret = backend.process_video(_video_url, skip_time="00:00:00", break_on_time=None)
-        print("Processed video: {}".format(_video_url))
-        print("Time now: {}".format(datetime.now()))
-        if output_type_json:
-            print(json.dumps(ret, indent=4))
-        else:
-            print(ret.head())
-        # print(json.dumps(ret, indent=4, sort_keys=True))
-
-    # backend.process("https://www.youtube.com/watch?v=HGPhsSsZE7E")
+            self.detect_sport_events(_converted_path, skip_time, break_on_time)
+            data = self.recognize_sport_event(_converted_path, skip_time, break_on_time)
+            data.replace("line_out", "lineout", inplace=True)
+            data.sort_values(by=['start_frame_id'], inplace=True)
+        return data

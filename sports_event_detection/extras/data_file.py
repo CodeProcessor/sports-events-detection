@@ -8,6 +8,7 @@ import enum
 import pandas as pd
 
 from sports_event_detection.extras.common import EventTypes
+from sports_event_detection.extras.sports_utils import convert_string_time_to_seconds
 
 
 class RowData:
@@ -44,21 +45,7 @@ class DataFile:
         return self.data.shape
 
     def __get_time_in_secs(self, time_str: str) -> int:
-        _time_split = time_str.split('.')
-        _time_in_seconds = 0
-
-        def second_correction(_second):
-            if len(_second) == 1:
-                _second = _second + '0'
-            return _second
-
-        if len(_time_split) == 2:
-            _min, _sec = _time_split
-            _time_in_seconds = int(_min) * 60 + int(second_correction(_sec))
-        elif len(_time_split) == 3:
-            _hour, _min, _sec = _time_split
-            _time_in_seconds = int(_hour) * 3600 + int(_min) * 60 + int(second_correction(_sec))
-        return _time_in_seconds
+        return convert_string_time_to_seconds(time_str)
 
     def get_info(self, pointer=None) -> RowData:
         row_data = self.data.loc[self.row_pointer]

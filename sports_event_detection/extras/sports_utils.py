@@ -35,3 +35,66 @@ def iou(box1, box2):
     else:
         _iou = 0
     return _iou
+
+
+def convert_string_time_to_seconds(time_str: str) -> int:
+    _time_split = time_str.split(':')
+    _time_in_seconds = 0
+
+    def second_correction(_second):
+        if len(_second) == 1:
+            _second = _second + '0'
+        return _second
+
+    if len(_time_split) == 2:
+        _min, _sec = _time_split
+        _time_in_seconds = int(_min) * 60 + int(second_correction(_sec))
+    elif len(_time_split) == 3:
+        _hour, _min, _sec = _time_split
+        _time_in_seconds = int(_hour) * 3600 + int(_min) * 60 + int(second_correction(_sec))
+    return _time_in_seconds
+
+
+def check_overlap(series_a, series_b, verbose=False):
+    a_start_second = convert_string_time_to_seconds(series_a['start_time'])
+    a_end_second = convert_string_time_to_seconds(series_a['end_time'])
+
+    b_start_second = convert_string_time_to_seconds(series_b['start_time'])
+    b_end_second = convert_string_time_to_seconds(series_b['end_time'])
+
+    _overlap = False
+    _value = 0
+    if max(a_start_second, b_start_second) - min(a_end_second, b_end_second) < 0:
+        _value = (min(a_end_second, b_end_second) - max(a_start_second, b_start_second)) * 1.0 \
+                 / (max(a_end_second, b_end_second) - min(a_start_second, b_start_second))
+        _overlap = True
+    else:
+        _value = b_start_second - a_start_second if a_start_second < b_start_second else b_end_second - a_start_second
+
+    print("{} - {} | {} - {} | {} {} ".format(
+        series_a['start_time'],
+        series_a['end_time'],
+        series_b['start_time'],
+        series_b['end_time'],
+        _overlap,
+        _value)
+    ) if verbose else ""
+    return _overlap, _value
+
+
+def remove_noplay_overlapped_events(prediction_df):
+    no_play_df = prediction_df[prediction_df['event_name'] == 'digital_noplay']
+    play_df = prediction_df[prediction_df['event_name'] != 'digital_noplay']
+    for index1, row in no_play_df.iterrows():
+        for index2, row_event in play_df.iterrows():
+            _overlap, _value = check_overlap(row, row_event, verbose=False)
+            if _overlap:
+                try:
+                    prediction_df.drop(index2, inplace=True, axis=0)
+                    print("Index dropped {}".format(index2))
+                    # print("No play \n{}".format(row))
+                    # print("Dropped \n{}".format(row_event))
+                    # print("=" * 50)
+                except KeyError as e:
+                    print(index2)
+    return prediction_df
